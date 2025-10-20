@@ -1,0 +1,19 @@
+{
+  "name": "Life Moments Tracker",
+  "short_name": "Moments",
+  "description": "Track important dates and life events with day counts",
+  "theme_color": "#6366f1",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "orientation": "portrait",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

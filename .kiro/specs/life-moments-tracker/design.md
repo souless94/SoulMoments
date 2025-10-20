@@ -8,9 +8,11 @@ The Life Moments Tracker is a Progressive Web App (PWA) that provides a simple, 
 
 ### Technology Stack
 - **Frontend Framework**: Next.js 15+ (App Router) with React 19+ for modern development experience
+- **UI Framework**: shadcn/ui components built on Radix UI primitives for accessibility and consistency
+- **Form Management**: React Hook Form with Zod validation for type-safe form handling
 - **Styling**: Tailwind CSS for utility-first responsive design and mobile optimization
 - **Database**: RxDB with Dexie.js storage adapter for reactive offline-first data management
-- **PWA Features**: Next.js built-in PWA support with next-pwa plugin for service workers and manifest
+- **PWA Features**: Next.js built-in PWA support with service workers and manifest
 - **TypeScript**: Full TypeScript support for type safety and better development experience
 
 ### Application Structure
@@ -19,15 +21,23 @@ src/
 ├── app/
 │   ├── layout.tsx         # Root layout with PWA configuration
 │   ├── page.tsx          # Main moments grid page
-│   ├── globals.css       # Global Tailwind CSS imports
+│   ├── globals.css       # Global Tailwind CSS and shadcn/ui imports
 │   └── components/
-│       ├── MomentTile.tsx    # Individual moment tile component
+│       ├── MomentTile.tsx    # Individual moment tile component using Card
 │       ├── MomentGrid.tsx    # Responsive grid container
-│       ├── AddMomentModal.tsx # Add/edit moment modal
+│       ├── AddMomentModal.tsx # Add/edit moment modal using Dialog
 │       └── Header.tsx        # Navigation header
+├── components/
+│   └── ui/               # shadcn/ui components
+│       ├── button.tsx    # Button component
+│       ├── card.tsx      # Card component for tiles
+│       ├── dialog.tsx    # Dialog component for modals
+│       ├── input.tsx     # Input component for forms
+│       └── label.tsx     # Label component for forms
 ├── lib/
 │   ├── database.ts       # RxDB database setup and configuration
-│   ├── schemas.ts        # RxDB schemas and types
+│   ├── schemas.ts        # RxDB schemas and Zod validation schemas
+│   ├── validations.ts    # Zod form validation schemas
 │   ├── hooks/
 │   │   ├── useMoments.ts # Custom hook for moment operations
 │   │   └── useDatabase.ts # Database connection hook
@@ -61,25 +71,30 @@ export interface Moment extends MomentDocument {
 
 ### Core Components
 
-#### 1. Tile Component
-- **Purpose**: Visual representation of a single moment
-- **Layout**: Card-based design with title, date, and day count
-- **States**: Past events (muted colors), future events (bright colors), today (highlighted)
-- **Interactions**: Tap to edit/delete, long press for context menu
+#### 1. Tile Component (shadcn/ui Card)
+- **Purpose**: Visual representation of a single moment using Card component
+- **Layout**: Card with CardHeader (title), CardContent (day count), and CardFooter (date)
+- **States**: Past events (muted variant), future events (default variant), today (accent variant)
+- **Interactions**: Tap to edit/delete, accessible keyboard navigation
 
 #### 2. Tile Grid
 - **Layout**: CSS Grid with responsive columns (1 on mobile, 2-3 on tablet, 3-4 on desktop)
 - **Sorting**: Chronological order with upcoming events first, then past events
 - **Performance**: Virtual scrolling for large collections (100+ moments)
 
-#### 3. Add/Edit Modal
-- **Fields**: Title input (text), Date picker (native HTML5 date input)
-- **Validation**: Required title, valid date selection
-- **Mobile UX**: Full-screen modal on mobile, centered dialog on desktop
+#### 3. Add/Edit Modal (shadcn/ui Dialog with React Hook Form)
+- **Components**: Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+- **Form Management**: React Hook Form with useForm hook for state management
+- **Fields**: Input component for title, native HTML5 date input with Label, integrated with react-hook-form
+- **Validation**: Zod schema validation with real-time error feedback
+- **Actions**: Button components for Save/Cancel with proper variants and form submission handling
+- **Mobile UX**: Responsive dialog that adapts to screen size
+- **Error Handling**: Field-level and form-level error display using shadcn/ui error styling
 
 #### 4. Navigation Header
-- **Elements**: App title, Add button, Settings menu
-- **Mobile**: Sticky header with touch-friendly button sizes (44px minimum)
+- **Elements**: App title, Button component for Add action
+- **Mobile**: Sticky header with touch-friendly Button sizes (44px minimum)
+- **Accessibility**: Proper ARIA labels and keyboard navigation
 
 ## Data Models
 
@@ -113,6 +128,41 @@ export const dbConfig = {
 };
 ```
 
+### Form Validation with Zod
+```typescript
+// Zod validation schema for moment form
+import { z } from 'zod';
+
+export const momentFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, 'Title is required')
+    .max(100, 'Title must be 100 characters or less')
+    .trim(),
+  date: z
+    .string()
+    .min(1, 'Date is required')
+    .refine((date) => {
+      const parsedDate = new Date(date);
+      return !isNaN(parsedDate.getTime());
+    }, 'Please enter a valid date')
+});
+
+export type MomentFormData = z.infer<typeof momentFormSchema>;
+
+// React Hook Form integration
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+const form = useForm<MomentFormData>({
+  resolver: zodResolver(momentFormSchema),
+  defaultValues: {
+    title: '',
+    date: ''
+  }
+});
+```
+
 ### Date Calculations
 ```typescript
 // Day difference calculation utility
@@ -141,26 +191,114 @@ export function calculateDayDifference(momentDate: string): {
 
 ## User Interface Design
 
-### Visual Design System
-- **Color Palette**: 
-  - Primary: #6366f1 (indigo)
-  - Secondary: #8b5cf6 (purple)
-  - Success: #10b981 (emerald)
-  - Warning: #f59e0b (amber)
-  - Neutral: #6b7280 (gray)
-- **Typography**: System font stack for optimal performance
-- **Spacing**: 8px base unit with consistent spacing scale
-- **Border Radius**: 12px for cards, 8px for buttons
+### Visual Design System (shadcn/ui Theme)
+- **Color System**: CSS custom properties with automatic dark mode support
+  - Primary: `hsl(var(--primary))` - Main brand color
+  - Secondary: `hsl(var(--secondary))` - Secondary actions
+  - Accent: `hsl(var(--accent))` - Highlighted elements
+  - Muted: `hsl(var(--muted))` - Subdued content
+  - Destructive: `hsl(var(--destructive))` - Error states
+- **Typography**: System font stack with consistent sizing scale
+- **Spacing**: Tailwind's spacing scale (4px base unit)
+- **Border Radius**: CSS custom property `var(--radius)` for consistent rounding
+- **Shadows**: Tailwind shadow utilities for depth and elevation
 
-### Tile Design with Tailwind CSS
+### Form Component with React Hook Form and shadcn/ui
 ```typescript
-// MomentTile component styling classes
-const tileClasses = {
-  base: "rounded-xl p-5 shadow-md transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer",
-  past: "bg-gradient-to-br from-gray-400 to-gray-600 text-white",
-  today: "bg-gradient-to-br from-emerald-400 to-emerald-600 text-white ring-2 ring-emerald-300",
-  future: "bg-gradient-to-br from-indigo-400 to-purple-600 text-white"
+// AddMomentModal component with React Hook Form
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { momentFormSchema, type MomentFormData } from "@/lib/validations";
+
+export function AddMomentModal({ open, onOpenChange, onSubmit }) {
+  const form = useForm<MomentFormData>({
+    resolver: zodResolver(momentFormSchema),
+    defaultValues: { title: '', date: '' }
+  });
+
+  const handleSubmit = (data: MomentFormData) => {
+    onSubmit(data);
+    form.reset();
+    onOpenChange(false);
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Add New Moment</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <div>
+            <Label htmlFor="title">Title</Label>
+            <Input
+              id="title"
+              {...form.register('title')}
+              className={form.formState.errors.title ? 'border-destructive' : ''}
+            />
+            {form.formState.errors.title && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.title.message}
+              </p>
+            )}
+          </div>
+          <div>
+            <Label htmlFor="date">Date</Label>
+            <Input
+              id="date"
+              type="date"
+              {...form.register('date')}
+              className={form.formState.errors.date ? 'border-destructive' : ''}
+            />
+            {form.formState.errors.date && (
+              <p className="text-sm text-destructive mt-1">
+                {form.formState.errors.date.message}
+              </p>
+            )}
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button type="submit" disabled={form.formState.isSubmitting}>
+              Save Moment
+            </Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+
+### Tile Design with shadcn/ui Components
+```typescript
+// MomentTile component using shadcn/ui Card
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+const tileVariants = {
+  past: "bg-muted text-muted-foreground",
+  today: "bg-accent text-accent-foreground ring-2 ring-primary",
+  future: "bg-primary text-primary-foreground"
 };
+
+// Component structure
+<Card className={cn("transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer", tileVariants[status])}>
+  <CardHeader>
+    <CardTitle>{title}</CardTitle>
+  </CardHeader>
+  <CardContent>
+    <p className="text-2xl font-bold">{displayText}</p>
+  </CardContent>
+  <CardFooter>
+    <p className="text-sm opacity-75">{date}</p>
+  </CardFooter>
+</Card>
 
 // Responsive grid classes
 const gridClasses = "grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4";
