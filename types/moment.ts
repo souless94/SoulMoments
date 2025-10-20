@@ -28,6 +28,8 @@ export interface Moment extends MomentDocument {
   daysDifference: number;  // Calculated field: positive for future, negative for past, 0 for today
   displayText: string;     // Human-readable text: "X days ago" / "X days until" / "Today"
   status: 'past' | 'today' | 'future';  // Status for styling and logic
+  nextOccurrence?: string; // Next occurrence date for repeat events (YYYY-MM-DD)
+  isRepeating: boolean;    // Whether this moment has a repeat frequency set
 }
 
 /**

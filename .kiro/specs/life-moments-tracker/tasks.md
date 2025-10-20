@@ -187,9 +187,10 @@
     - Add descriptive toast messages with clear undo/close instructions
     - _Requirements: 3.1, 3.4, 6.1, 6.2, 6.3_
 
-- [ ] 4. Implement repeat event logic and calculations
+- [x] 4. Implement repeat event logic and calculations
 
-  - [ ] 4.1 Update date utilities for repeat event calculations
+
+  - [x] 4.1 Update date utilities for repeat event calculations
 
     - Create calculateNextOccurrence function for repeat frequencies (daily, weekly, monthly, yearly)
     - Enhance calculateDayDifference to handle repeat events and return next occurrence
@@ -198,7 +199,7 @@
     - Test edge cases for leap years, month boundaries, and timezone handling
     - _Requirements: 5.6, 5.7, 7.2, 7.4, 7.5_
 
-  - [ ] 4.2 Update moment processing and grid sorting logic
+  - [x] 4.2 Update moment processing and grid sorting logic
 
     - Modify MomentGrid component to separate upcoming and past events correctly
     - Ensure all repeat events appear in upcoming section regardless of original date
@@ -207,15 +208,16 @@
     - Test grid behavior with mixed repeat and non-repeat events
     - _Requirements: 5.1, 5.6, 5.7, 7.5_
 
-  - [ ] 4.3 Enhance MomentTile component with repeat indicators
+  - [x] 4.3 Enhance MomentTile component with repeat indicators
 
     - Add Repeat icon from Lucide to tiles with repeat frequency set
     - Update tile footer to show "Next: [date]" for repeat events instead of original date
     - Ensure proper styling and spacing for repeat indicator icon
     - Test tile display with various repeat frequencies and edge cases
+
     - _Requirements: 5.1, 5.2, 5.3, 7.3_
 
-  - [ ] 4.4 Update MomentBanner to handle repeat events
+  - [x] 4.4 Update MomentBanner to handle repeat events
 
     - Modify banner logic to show countdown to next occurrence for repeat events
     - Update focused moment display to show next occurrence information
@@ -301,6 +303,7 @@
     - Implement code splitting for modal components using dynamic imports
     - Optimize shadcn/ui and Tailwind CSS bundle size
     - Add React performance optimizations (useMemo, useCallback)
+    - Remove all unneccesary code.
     - Test performance with large datasets and virtual scrolling if needed
     - _Requirements: 2.2, 3.2, 3.4_
 

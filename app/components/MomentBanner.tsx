@@ -19,10 +19,10 @@ export interface MomentBannerProps {
  * Banner component showing moment statistics and highlights
  */
 export function MomentBanner({ moments, focusedMoment, className }: MomentBannerProps) {
-  // Calculate statistics
-  const todayMoments = moments.filter(m => m.status === 'today');
-  const futureMoments = moments.filter(m => m.status === 'future').sort((a, b) => a.daysDifference - b.daysDifference);
-  const pastMoments = moments.filter(m => m.status === 'past').sort((a, b) => b.daysDifference - a.daysDifference);
+  // Calculate statistics - treat repeat events as upcoming
+  const todayMoments = moments.filter(m => m.status === 'today' && !m.isRepeating);
+  const futureMoments = moments.filter(m => m.status === 'future' || m.isRepeating).sort((a, b) => a.daysDifference - b.daysDifference);
+  const pastMoments = moments.filter(m => m.status === 'past' && !m.isRepeating).sort((a, b) => b.daysDifference - a.daysDifference);
 
   // Get next upcoming moment
   const nextMoment = futureMoments[0];
@@ -44,21 +44,36 @@ export function MomentBanner({ moments, focusedMoment, className }: MomentBanner
         {focusedMoment && (
           <div className="flex items-center gap-2">
             <span className="text-2xl">
-              {focusedMoment.status === 'today' ? '🎉' : 
-               focusedMoment.status === 'future' ? '⏰' : '📅'}
+              {focusedMoment.status === 'today' && !focusedMoment.isRepeating ? '🎉' : 
+               (focusedMoment.status === 'future' || focusedMoment.isRepeating) ? '⏰' : '📅'}
             </span>
             <div>
               <p className={cn(
                 "font-semibold",
-                focusedMoment.status === 'today' && "text-accent-foreground",
-                focusedMoment.status === 'future' && "text-primary",
-                focusedMoment.status === 'past' && "text-muted-foreground"
+                focusedMoment.status === 'today' && !focusedMoment.isRepeating && "text-accent-foreground",
+                (focusedMoment.status === 'future' || focusedMoment.isRepeating) && "text-primary",
+                focusedMoment.status === 'past' && !focusedMoment.isRepeating && "text-muted-foreground"
               )}>
                 {focusedMoment.displayText}
+                {focusedMoment.isRepeating && (
+                  <span className="ml-1 text-xs opacity-70">
+                    (repeats {focusedMoment.repeatFrequency})
+                  </span>
+                )}
               </p>
               <p className="text-sm text-muted-foreground">
                 {focusedMoment.title}
                 {focusedMoment.description && ` - ${focusedMoment.description}`}
+                {focusedMoment.isRepeating && focusedMoment.nextOccurrence && (
+                  <span className="block text-xs mt-1">
+                    Next occurrence: {new Date(focusedMoment.nextOccurrence + 'T00:00:00.000Z').toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                      timeZone: 'UTC'
+                    })}
+                  </span>
+                )}
               </p>
             </div>
           </div>

@@ -6,12 +6,14 @@
 import { describe, test, expect, beforeAll, afterAll, vi } from 'vitest';
 import {
   calculateDayDifference,
+  calculateNextOccurrence,
   formatDisplayDate,
   isValidDateString,
   isLeapYear,
   getDaysInMonth,
   sortMomentsByDate
 } from '../date-utils';
+import type { RepeatFrequency } from '../../types/moment';
 
 // Mock Date.now() for consistent testing
 const mockToday = new Date('2024-03-15T12:00:00.000Z');
@@ -60,6 +62,25 @@ describe('calculateDayDifference', () => {
     const result = calculateDayDifference('2024-02-29');
     expect(result.daysDifference).toBe(-15);
     expect(result.displayText).toBe('15 days ago');
+    expect(result.isRepeating).toBe(false);
+    expect(result.nextOccurrence).toBeUndefined();
+  });
+
+  test('handles repeat events correctly', () => {
+    // Past date with daily repeat should show next occurrence
+    const result = calculateDayDifference('2024-03-10', 'daily');
+    expect(result.isRepeating).toBe(true);
+    expect(result.status).toBe('future'); // Always future for repeating events
+    expect(result.nextOccurrence).toBe('2024-03-16'); // Next day after today
+    expect(result.daysDifference).toBe(1);
+    expect(result.displayText).toBe('1 day until');
+  });
+
+  test('handles non-repeating events', () => {
+    const result = calculateDayDifference('2024-03-10', 'none');
+    expect(result.isRepeating).toBe(false);
+    expect(result.status).toBe('past');
+    expect(result.nextOccurrence).toBeUndefined();
   });
 });
 
@@ -143,5 +164,83 @@ describe('sortMomentsByDate', () => {
     expect(sorted[2].daysDifference).toBe(10); // Further future
     expect(sorted[3].daysDifference).toBe(-5); // Recent past
     expect(sorted[4].daysDifference).toBe(-10); // Older past
+  });
+});
+
+describe('calculateNextOccurrence', () => {
+  test('returns original date for non-repeating events', () => {
+    const result = calculateNextOccurrence('2024-03-10', 'none');
+    expect(result).toBe('2024-03-10');
+  });
+
+  test('calculates daily repeat correctly', () => {
+    const result = calculateNextOccurrence('2024-03-10', 'daily');
+    expect(result).toBe('2024-03-16'); // Next day after today (2024-03-15)
+  });
+
+  test('calculates weekly repeat correctly', () => {
+    const result = calculateNextOccurrence('2024-03-08', 'weekly'); // Friday
+    expect(result).toBe('2024-03-22'); // Next Friday after today
+  });
+
+  test('calculates monthly repeat correctly', () => {
+    const result = calculateNextOccurrence('2024-02-15', 'monthly');
+    expect(result).toBe('2024-04-15'); // Next month after today
+  });
+
+  test('calculates yearly repeat correctly', () => {
+    const result = calculateNextOccurrence('2023-03-15', 'yearly');
+    expect(result).toBe('2025-03-15'); // Next year after today
+  });
+
+  test('handles month boundary edge case (Jan 31)', () => {
+    const result = calculateNextOccurrence('2024-01-31', 'monthly');
+    // Jan 31 -> Feb 29 (leap year, adjusted from 31) -> Mar 29 (next after today)
+    expect(result).toBe('2024-03-29');
+  });
+
+  test('handles leap year edge case (Feb 29)', () => {
+    const result = calculateNextOccurrence('2024-02-29', 'yearly');
+    expect(result).toBe('2025-02-28'); // 2025 is not a leap year
+  });
+
+  test('handles future dates correctly', () => {
+    // If the original date is already in the future, it should return that date
+    const result = calculateNextOccurrence('2024-03-20', 'weekly');
+    expect(result).toBe('2024-03-20'); // Already in future, so return as-is
+  });
+});
+
+describe('repeat event integration', () => {
+  test('daily repeat shows correct next occurrence', () => {
+    const result = calculateDayDifference('2024-01-01', 'daily');
+    expect(result.isRepeating).toBe(true);
+    expect(result.status).toBe('future');
+    expect(result.nextOccurrence).toBe('2024-03-16');
+    expect(result.daysDifference).toBe(1);
+  });
+
+  test('weekly repeat shows correct next occurrence', () => {
+    const result = calculateDayDifference('2024-03-08', 'weekly');
+    expect(result.isRepeating).toBe(true);
+    expect(result.status).toBe('future');
+    expect(result.nextOccurrence).toBe('2024-03-22');
+    expect(result.daysDifference).toBe(7);
+  });
+
+  test('monthly repeat shows correct next occurrence', () => {
+    const result = calculateDayDifference('2024-01-15', 'monthly');
+    expect(result.isRepeating).toBe(true);
+    expect(result.status).toBe('future');
+    expect(result.nextOccurrence).toBe('2024-04-15');
+    expect(result.daysDifference).toBe(31);
+  });
+
+  test('yearly repeat shows correct next occurrence', () => {
+    const result = calculateDayDifference('2023-03-15', 'yearly');
+    expect(result.isRepeating).toBe(true);
+    expect(result.status).toBe('future'); // Next year occurrence
+    expect(result.nextOccurrence).toBe('2025-03-15');
+    expect(result.daysDifference).toBe(365); // Days until next year
   });
 });

@@ -43,8 +43,10 @@ export function MomentTile({
   // Use the pre-calculated values from the moment object for consistency
   const { status } = moment;
 
-  // Format the date for display
-  const formattedDate = formatDisplayDate(moment.date);
+  // Format the date for display - use next occurrence for repeat events
+  const displayDate = moment.isRepeating && moment.nextOccurrence ? moment.nextOccurrence : moment.date;
+  const formattedDate = formatDisplayDate(displayDate);
+  const datePrefix = moment.isRepeating && moment.nextOccurrence ? "Next: " : "";
 
   // Handle tile click - for banner countdown change
   const handleClick = () => {
@@ -188,8 +190,13 @@ export function MomentTile({
           )}
         >
           <span className="flex-1 truncate">{moment.title}</span>
-          {moment.repeatFrequency && moment.repeatFrequency !== "none" && (
-            <Repeat className="h-3 w-3 flex-shrink-0 opacity-60" />
+          {moment.isRepeating && (
+            <Repeat className={cn(
+              "h-3 w-3 flex-shrink-0",
+              status === "today" && "text-accent-foreground opacity-80",
+              status === "future" && "text-primary opacity-80",
+              status === "past" && "text-muted-foreground opacity-60"
+            )} />
           )}
           {status === "today" && <span className="flex-shrink-0">🎉</span>}
         </CardTitle>
@@ -219,7 +226,7 @@ export function MomentTile({
             status === "past" && "text-muted-foreground/70"
           )}
         >
-          {formattedDate}
+          {datePrefix}{formattedDate}
         </p>
       </CardFooter>
     </Card>
@@ -241,6 +248,8 @@ export function MomentTileDemo() {
       daysDifference: 0,
       displayText: "Today",
       status: "today",
+      nextOccurrence: "2024-06-15",
+      isRepeating: true,
     },
     {
       id: "2",
@@ -252,6 +261,7 @@ export function MomentTileDemo() {
       daysDifference: 30,
       displayText: "30 days until",
       status: "future",
+      isRepeating: false,
     },
     {
       id: "3",
@@ -263,6 +273,7 @@ export function MomentTileDemo() {
       daysDifference: -90,
       displayText: "90 days ago",
       status: "past",
+      isRepeating: false,
     },
   ];
 

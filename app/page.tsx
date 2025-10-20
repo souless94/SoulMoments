@@ -11,7 +11,7 @@ import { calculateDayDifference } from '@/lib/date-utils';
 import type { Moment, MomentFormData } from '@/types/moment';
 
 // Sample data to demonstrate all UI states
-const SAMPLE_MOMENTS: Omit<Moment, 'daysDifference' | 'displayText' | 'status'>[] = [
+const SAMPLE_MOMENTS: Omit<Moment, 'daysDifference' | 'displayText' | 'status' | 'nextOccurrence' | 'isRepeating'>[] = [
   {
     id: '1',
     title: 'Wedding Anniversary',
@@ -89,13 +89,15 @@ const SAMPLE_MOMENTS: Omit<Moment, 'daysDifference' | 'displayText' | 'status'>[
 /**
  * Helper function to convert raw moment data to full Moment objects with calculated fields
  */
-function enrichMomentWithCalculations(moment: Omit<Moment, 'daysDifference' | 'displayText' | 'status'>): Moment {
-  const { daysDifference, displayText, status } = calculateDayDifference(moment.date);
+function enrichMomentWithCalculations(moment: Omit<Moment, 'daysDifference' | 'displayText' | 'status' | 'nextOccurrence' | 'isRepeating'>): Moment {
+  const { daysDifference, displayText, status, nextOccurrence, isRepeating } = calculateDayDifference(moment.date, moment.repeatFrequency);
   return {
     ...moment,
     daysDifference,
     displayText,
-    status
+    status,
+    nextOccurrence,
+    isRepeating
   };
 }
 
@@ -118,12 +120,14 @@ export default function Home() {
     const updateDayCalculations = () => {
       setMoments(currentMoments => 
         currentMoments.map(moment => {
-          const { daysDifference, displayText, status } = calculateDayDifference(moment.date);
+          const { daysDifference, displayText, status, nextOccurrence, isRepeating } = calculateDayDifference(moment.date, moment.repeatFrequency);
           return {
             ...moment,
             daysDifference,
             displayText,
-            status
+            status,
+            nextOccurrence,
+            isRepeating
           };
         })
       );

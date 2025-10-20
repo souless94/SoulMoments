@@ -58,4 +58,6 @@ export interface Moment extends MomentDocument {
   daysDifference: number;
   displayText: string;
   status: 'past' | 'today' | 'future';
+  nextOccurrence?: string;
+  isRepeating: boolean;
 }

@@ -47,13 +47,13 @@ export function MomentGrid({
   // Separate moments by status for better organization
   // Repeating events are always considered "upcoming" since they repeat
   const futureMoments = sortedMoments.filter(m => 
-    m.status === 'future' || (m.repeatFrequency && m.repeatFrequency !== 'none')
+    m.status === 'future' || m.isRepeating
   );
   const todayMoments = sortedMoments.filter(m => 
-    m.status === 'today' && (!m.repeatFrequency || m.repeatFrequency === 'none')
+    m.status === 'today' && !m.isRepeating
   );
   const pastMoments = sortedMoments.filter(m => 
-    m.status === 'past' && (!m.repeatFrequency || m.repeatFrequency === 'none')
+    m.status === 'past' && !m.isRepeating
   );
 
   const gridClasses = cn(
@@ -131,7 +131,9 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: 0,
       displayText: 'Today',
-      status: 'today'
+      status: 'today',
+      nextOccurrence: new Date().toISOString().split('T')[0],
+      isRepeating: true
     },
     {
       id: '2',
@@ -142,7 +144,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: 30,
       displayText: '30 days until',
-      status: 'future'
+      status: 'future',
+      isRepeating: false
     },
     {
       id: '3',
@@ -153,7 +156,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: -90,
       displayText: '90 days ago',
-      status: 'past'
+      status: 'past',
+      isRepeating: false
     },
     {
       id: '4',
@@ -164,7 +168,9 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: 7,
       displayText: '7 days until',
-      status: 'future'
+      status: 'future',
+      nextOccurrence: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      isRepeating: true
     },
     {
       id: '5',
@@ -175,7 +181,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: -365,
       displayText: '365 days ago',
-      status: 'past'
+      status: 'past',
+      isRepeating: false
     },
     {
       id: '6',
@@ -186,7 +193,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: 120,
       displayText: '120 days until',
-      status: 'future'
+      status: 'future',
+      isRepeating: false
     },
     {
       id: '7',
@@ -197,7 +205,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: -30,
       displayText: '30 days ago',
-      status: 'past'
+      status: 'past',
+      isRepeating: false
     },
     {
       id: '8',
@@ -208,7 +217,8 @@ export function MomentGridDemo() {
       updatedAt: Date.now(),
       daysDifference: 60,
       displayText: '60 days until',
-      status: 'future'
+      status: 'future',
+      isRepeating: false
     }
   ];
 
