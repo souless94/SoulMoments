@@ -7,27 +7,16 @@ import { MomentGrid } from './components/MomentGrid';
 import { MomentBanner } from './components/MomentBanner';
 import { MomentModal } from './components/MomentModal';
 import { FloatingAddButton } from './components/FloatingAddButton';
+import { initDB, generateId } from '@/lib/moments-db';
 import { calculateDayDifference } from '@/lib/date-utils';
-import type { Moment, MomentFormData } from '@/types/moment';
-
-/**
- * Helper function to convert raw moment data to full Moment objects with calculated fields
- */
-function enrichMomentWithCalculations(moment: Omit<Moment, 'daysDifference' | 'displayText' | 'status' | 'nextOccurrence' | 'isRepeating'>): Moment {
-  const { daysDifference, displayText, status, nextOccurrence, isRepeating } = calculateDayDifference(moment.date, moment.repeatFrequency);
-  return {
-    ...moment,
-    daysDifference,
-    displayText,
-    status,
-    nextOccurrence,
-    isRepeating
-  };
-}
+import { toast } from 'sonner';
+import type { Moment, MomentFormData, MomentDocument } from '@/types/moment';
 
 export default function Home() {
-  // Initialize with empty moments array - will be replaced by database integration
+  // State
   const [moments, setMoments] = React.useState<Moment[]>([]);
+  const [dbLoading, setDbLoading] = React.useState(true);
+  const [dbError, setDbError] = React.useState<string | null>(null);
   
   // Modal state - using React Hook Form approach
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -37,42 +26,58 @@ export default function Home() {
   // Banner focused moment state
   const [focusedMoment, setFocusedMoment] = React.useState<Moment | null>(null);
 
-  // Update day calculations when component mounts or date changes
+  // Initialize database and set up reactive query (following RxDB quickstart pattern)
   React.useEffect(() => {
-    const updateDayCalculations = () => {
-      setMoments(currentMoments => 
-        currentMoments.map(moment => {
-          const { daysDifference, displayText, status, nextOccurrence, isRepeating } = calculateDayDifference(moment.date, moment.repeatFrequency);
-          return {
-            ...moment,
-            daysDifference,
-            displayText,
-            status,
-            nextOccurrence,
-            isRepeating
-          };
-        })
-      );
+    let subscription: any = null;
+
+    const init = async () => {
+      try {
+        setDbLoading(true);
+        setDbError(null);
+        
+        // Initialize database
+        const db = await initDB();
+        console.log('Database initialized successfully');
+        
+        // Set up reactive query following RxDB quickstart pattern
+        const observable = db.moments.find({
+          selector: {},
+          sort: [{ createdAt: 'desc' }]
+        }).$;
+        
+        subscription = observable.subscribe((docs: any) => {
+          console.log('Currently have ' + docs.length + ' moments');
+          
+          // Transform documents to UI-ready moments
+          const processedMoments = docs.map((doc: any) => {
+            const data = doc.toJSON() as MomentDocument;
+            const calculation = calculateDayDifference(data.date, data.repeatFrequency);
+            
+            return {
+              ...data,
+              ...calculation,
+              isRepeating: data.repeatFrequency !== 'none',
+            } as Moment;
+          });
+          
+          setMoments(processedMoments);
+        });
+          
+      } catch (error) {
+        console.error('Failed to initialize database:', error);
+        setDbError(error instanceof Error ? error.message : 'Failed to initialize database');
+      } finally {
+        setDbLoading(false);
+      }
     };
 
-    // Update immediately
-    updateDayCalculations();
+    init();
 
-    // Update daily at midnight
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    const msUntilMidnight = tomorrow.getTime() - now.getTime();
-
-    const timeoutId = setTimeout(() => {
-      updateDayCalculations();
-      // Set up daily interval after first midnight update
-      const intervalId = setInterval(updateDayCalculations, 24 * 60 * 60 * 1000);
-      return () => clearInterval(intervalId);
-    }, msUntilMidnight);
-
-    return () => clearTimeout(timeoutId);
+    return () => {
+      if (subscription) {
+        subscription.unsubscribe();
+      }
+    };
   }, []);
 
   // Handle opening add modal
@@ -92,69 +97,83 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  // Handle delete button click
-  // TODO: Replace with database operations in task 6.2
+  // Handle delete button click with database operations and undo functionality
   const handleMomentDelete = (moment: Moment) => {
-    // Temporary implementation - will be replaced by database operations
-    setMoments(currentMoments => 
-      currentMoments.filter(m => m.id !== moment.id)
-    );
-    
+    // Show success toast with undo action
+    toast.success(`"${moment.title}" deleted`, {
+      action: {
+        label: "Undo",
+        onClick: () => {
+          toast.success("Deletion cancelled");
+        },
+      },
+      onDismiss: async () => {
+        // Actually delete from database when toast is dismissed
+        try {
+          const db = await initDB();
+          const doc = await db.moments.findOne(moment.id).exec();
+          if (doc) {
+            await doc.remove();
+          }
+        } catch (error) {
+          console.error('Failed to delete moment:', error);
+          toast.error('Failed to delete moment');
+        }
+      },
+      duration: 5000,
+    });
+
     // Clear focused moment if it was deleted
     if (focusedMoment?.id === moment.id) {
       setFocusedMoment(null);
     }
   };
 
-  // Handle form submission (create/update only)
-  // TODO: Replace with database operations in task 6.2
+  // Handle form submission (create/update only) with database operations
   const handleFormSubmit = async (data: MomentFormData) => {
     setIsLoading(true);
 
     try {
-      // Temporary implementation - will be replaced by database operations
+      const db = await initDB();
+      
       if (editingMoment) {
-        // Edit existing moment
-        const updatedMoment = enrichMomentWithCalculations({
-          ...editingMoment,
-          title: data.title,
-          description: data.description,
-          date: data.date,
-          repeatFrequency: data.repeatFrequency,
-          updatedAt: Date.now()
-        });
-        
-        setMoments(currentMoments =>
-          currentMoments.map(moment =>
-            moment.id === editingMoment.id ? updatedMoment : moment
-          )
-        );
-        
-        // Update focused moment if it was the edited one
-        if (focusedMoment?.id === editingMoment.id) {
-          setFocusedMoment(updatedMoment);
+        // Update existing moment
+        const doc = await db.moments.findOne(editingMoment.id).exec();
+        if (doc) {
+          await doc.update({
+            $set: {
+              title: data.title.trim(),
+              description: data.description?.trim() || undefined,
+              date: data.date,
+              repeatFrequency: data.repeatFrequency || 'none',
+              updatedAt: new Date().toISOString(),
+            }
+          });
+          toast.success("Moment updated successfully");
         }
       } else {
-        // Add new moment
-        const newMoment = enrichMomentWithCalculations({
-          id: Date.now().toString(),
-          title: data.title,
-          description: data.description,
+        // Create new moment
+        const now = new Date().toISOString();
+        const momentData: MomentDocument = {
+          id: generateId(),
+          title: data.title.trim(),
+          description: data.description?.trim() || undefined,
           date: data.date,
-          repeatFrequency: data.repeatFrequency,
-          createdAt: Date.now(),
-          updatedAt: Date.now()
-        });
-        
-        setMoments(currentMoments => [...currentMoments, newMoment]);
+          repeatFrequency: data.repeatFrequency || 'none',
+          createdAt: now,
+          updatedAt: now,
+        };
+
+        await db.moments.insert(momentData);
+        toast.success("Moment created successfully");
       }
 
       // Close modal and reset state
       setIsModalOpen(false);
       setEditingMoment(null);
     } catch (error) {
-      console.error('Error processing moment:', error);
-      // TODO: Add proper error handling with user feedback
+      console.error("Error processing moment:", error);
+      toast.error("Failed to save moment");
     } finally {
       setIsLoading(false);
     }
@@ -167,6 +186,37 @@ export default function Home() {
     }
     setIsModalOpen(open);
   };
+
+  // Show database loading state
+  if (dbLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
+          <p className="text-sm text-muted-foreground">Connecting to database...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show database error state
+  if (dbError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <div className="text-destructive mb-2 text-2xl">⚠️</div>
+          <h3 className="font-semibold mb-2">Database Connection Error</h3>
+          <p className="text-sm text-muted-foreground mb-4">{dbError}</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

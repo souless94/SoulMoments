@@ -16,8 +16,8 @@ export interface MomentDocument {
   description?: string; // Optional short description (max 200 characters)
   date: string;         // ISO date string (YYYY-MM-DD)
   repeatFrequency: RepeatFrequency; // How often this moment repeats
-  createdAt: number;    // Unix timestamp
-  updatedAt: number;    // Unix timestamp
+  createdAt: string;    // Unix timestamp
+  updatedAt: string;    // Unix timestamp
 }
 
 /**
