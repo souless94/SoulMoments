@@ -7,7 +7,7 @@
 'use client';
 
 import React from 'react';
-import { PWAInstallIcon } from './PWAInstallButton';
+
 import { cn } from '@/lib/utils';
 
 export interface HeaderProps {
@@ -35,10 +35,7 @@ export function Header({ className }: HeaderProps) {
           </p>
         </div>
 
-        {/* PWA Install Button */}
-        <div className="flex items-center gap-2">
-          <PWAInstallIcon />
-        </div>
+
 
       </div>
     </header>

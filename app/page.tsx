@@ -8,7 +8,7 @@ import { MomentGrid } from "./components/MomentGrid";
 import { MomentBanner } from "./components/MomentBanner";
 import { MomentModal } from "./components/MomentModal";
 import { FloatingAddButton } from "./components/FloatingAddButton";
-import { PWAInstallBanner } from "./components/PWAInstallButton";
+
 
 import { initDB, generateId } from "@/lib/moments-db";
 import type { Moment, MomentFormData, MomentDocument } from "@/types/moment";
@@ -111,9 +111,7 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto py-8 pb-24">
-        <div className="px-4">
-          <PWAInstallBanner />
-        </div>
+
 
         {moments.length > 0 && (
           <div className="mb-6 px-4">

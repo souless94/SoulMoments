@@ -226,7 +226,6 @@
 
 - [x] 5. Set up RxDB database and data layer
 
-
   - [x] 5.1 Configure RxDB with Dexie.js storage and repeat frequency support
 
     - Install and configure RxDB with Dexie.js adapter
@@ -255,11 +254,6 @@
 
 - [x] 5.4 Clean up hardcoded demo data and prepare for database integration
 
-
-
-
-
-
   - Remove hardcoded sample moments from components and utilities
   - Clean up any demo data or placeholder content in UI components
   - Remove temporary local state management code that will be replaced by database
@@ -269,18 +263,7 @@
 
 - [x] 6. Connect UI to database (replace local state with persistent storage)
 
-
-
-
-
-
-
-
-
-
   - [x] 6.1 Replace local state with database queries
-
-
 
     - Connect MomentGrid to RxDB reactive queries
     - Replace sample data and local state with real database
@@ -289,10 +272,6 @@
     - _Requirements: 1.1, 1.4, 5.1, 5.5_
 
   - [x] 6.2 Connect form functionality to database with repeat frequency support
-
-
-
-
 
     - Connect AddMomentModal to database create/update operations including repeat frequency
     - Connect delete functionality to database delete operations
@@ -303,17 +282,7 @@
 
 - [-] 7. Enhance PWA features and add polish
 
-
-
-
-
-
-
   - [x] 7.1 Enhance PWA configuration and icons
-
-
-
-
 
     - Create proper PWA icons in multiple sizes (192x192, 256x256, 384x384, 512x512)
     - Update manifest.json with complete metadata
@@ -321,15 +290,7 @@
     - Verify service worker caching strategies
     - _Requirements: 1.1, 1.2, 1.5_
 
-
-
   - [x] 7.2 Test and optimize offline functionality
-
-
-
-
-
-
 
     - Verify all features work without internet connection
     - Test data persistence across browser sessions
@@ -337,10 +298,20 @@
     - Add offline status indicators to UI using shadcn/ui components
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
+- [-] 8. Security hardening and final optimization
 
-- [ ] 8. Final optimization and testing
 
-  - [ ] 8.1 Optimize performance and bundle size
+
+  - [-] 8.1 Implement security headers and CSP
+
+
+    - Add comprehensive security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy)
+    - Implement Content Security Policy (CSP) for XSS protection
+    - Configure secure service worker headers with proper caching policies
+    - Add security headers for all routes and static assets
+    - _Requirements: 1.1, 1.2, 1.3, 1.4_
+
+  - [ ] 8.2 Optimize performance and bundle size
 
     - Implement code splitting for modal components using dynamic imports
     - Optimize shadcn/ui and Tailwind CSS bundle size
@@ -349,7 +320,7 @@
     - Test performance with large datasets and virtual scrolling if needed
     - _Requirements: 2.2, 3.2, 3.4_
 
-  - [ ] 8.2 Enhance mobile user experience
+  - [ ] 8.3 Enhance mobile user experience
 
     - Fine-tune touch interactions and gestures
     - Optimize keyboard behavior on mobile
@@ -357,7 +328,7 @@
     - Ensure proper viewport handling
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 8.3 Add accessibility improvements (leveraging shadcn/ui accessibility)
+  - [ ] 8.4 Add accessibility improvements (leveraging shadcn/ui accessibility)
 
     - Verify shadcn/ui components have proper ARIA labels and roles
     - Ensure keyboard navigation works throughout app using Radix UI primitives
@@ -365,7 +336,7 @@
     - Verify color contrast meets WCAG standards with shadcn/ui theme
     - _Requirements: 3.3, 3.5_
 
-  - [ ] 8.4 Create end-to-end tests
+  - [ ] 8.5 Create end-to-end tests
 
     - Write E2E tests for core user flows
     - Test PWA installation and offline functionality

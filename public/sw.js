@@ -3,7 +3,7 @@ const STATIC_CACHE = `life-moments-static-${CACHE_VERSION}`;
 const DYNAMIC_CACHE = `life-moments-dynamic-${CACHE_VERSION}`;
 const RUNTIME_CACHE = `life-moments-runtime-${CACHE_VERSION}`;
 
-// Static assets to cache immediately (optimized list)
+// Static assets to cache immediately for complete offline functionality
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -15,11 +15,26 @@ const STATIC_ASSETS = [
   '/img/icon-512-512.png'
 ];
 
-// Assets to cache on first request
+// Critical resources that must be cached for offline-first operation
+const CRITICAL_RESOURCES = [
+  '/_next/static/css/',
+  '/_next/static/chunks/',
+  '/_next/static/media/'
+];
+
+// Assets to cache on first request for offline-first functionality
 const RUNTIME_CACHE_PATTERNS = [
   /\/_next\/static\/.*/,
   /\.(?:js|css|woff2?|png|jpg|jpeg|gif|svg|ico)$/,
-  /\/api\/.*/
+  /\/fonts\/.*/,
+  /\/api\/.*/ // Cache API calls if any exist
+];
+
+// Offline-first: Cache everything needed for the app to work without internet
+const OFFLINE_FIRST_PATTERNS = [
+  /\/_next\/static\/chunks\/.*\.js$/,
+  /\/_next\/static\/css\/.*\.css$/,
+  /\/.*\.woff2?$/
 ];
 
 // Cache strategies
