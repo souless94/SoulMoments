@@ -43,48 +43,7 @@ export function Header({ onAddMoment, className }: HeaderProps) {
           </p>
         </div>
 
-        {/* Add Moment Button */}
-        <Button
-          onClick={handleAddClick}
-          size="default"
-          className={cn(
-            // Ensure minimum touch target size (44px)
-            "min-h-[44px] min-w-[44px]",
-            // Mobile-specific adjustments
-            "text-sm sm:text-base",
-            // Focus and hover states
-            "focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-          )}
-          aria-label="Add new moment"
-        >
-          <PlusIcon className="h-4 w-4 sm:mr-2" />
-          <span className="hidden sm:inline">Add Moment</span>
-        </Button>
       </div>
     </header>
   );
 }
-
-/**
- * Simple Plus icon component (inline SVG for better performance)
- */
-function PlusIcon({ className }: { className?: string }) {
-  return (
-    <svg
-      className={className}
-      fill="none"
-      stroke="currentColor"
-      viewBox="0 0 24 24"
-      xmlns="http://www.w3.org/2000/svg"
-      aria-hidden="true"
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M12 4v16m8-8H4"
-      />
-    </svg>
-  );
-}
-

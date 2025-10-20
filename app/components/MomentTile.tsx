@@ -44,9 +44,13 @@ export function MomentTile({
   const { status } = moment;
 
   // Format the date for display - use next occurrence for repeat events
-  const displayDate = moment.isRepeating && moment.nextOccurrence ? moment.nextOccurrence : moment.date;
+  const displayDate =
+    moment.isRepeating && moment.nextOccurrence
+      ? moment.nextOccurrence
+      : moment.date;
   const formattedDate = formatDisplayDate(displayDate);
-  const datePrefix = moment.isRepeating && moment.nextOccurrence ? "Next: " : "";
+  const datePrefix =
+    moment.isRepeating && moment.nextOccurrence ? "Next: " : "";
 
   // Handle tile click - for banner countdown change
   const handleClick = () => {
@@ -63,46 +67,60 @@ export function MomentTile({
     }
   };
 
-  // Handle delete with undo toast and countdown
+  // Handle delete with countdown and undo option - single toast, no spam
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tile click
 
     if (onDelete) {
-      let isUndone = false;
       let countdown = 5;
+      let isUndone = false;
+      let toastId: string | number;
+
+      // Create a single toast with countdown and undo
+      const showCountdownToast = () => {
+        toastId = toast.loading(
+          `Deleting "${moment.title}" in ${countdown} seconds`,
+          {
+            description: "Click Undo to cancel deletion",
+            action: {
+              label: "Undo",
+              onClick: () => {
+                isUndone = true;
+                clearInterval(countdownInterval);
+                clearTimeout(deleteTimer);
+                toast.dismiss(toastId);
+                toast.success("Deletion cancelled", {
+                  description: `"${moment.title}" has been restored`,
+                  duration: 1000,
+                });
+              },
+            },
+            duration: 5000, // Keep toast open until manually dismissed
+          }
+        );
+      };
 
       // Show initial toast
-      const toastId = toast.success(`"${moment.title}" deleted`, {
-        description: `Click undo to restore, or wait ${countdown} seconds to confirm deletion`,
-        action: {
-          label: "Undo",
-          onClick: () => {
-            isUndone = true;
-            clearTimeout(deleteTimer);
-            clearInterval(countdownInterval);
-            toast.success("Deletion cancelled", {
-              description: "Your moment has been restored",
-            });
-          },
-        },
-        duration: 5000, // Standard 5 second duration
-      });
+      showCountdownToast();
 
       // Update countdown every second
       const countdownInterval = setInterval(() => {
         countdown--;
         if (countdown > 0 && !isUndone) {
-          toast.success(`"${moment.title}" deleted`, {
+          // Update the existing toast instead of creating new ones
+          toast.error(`Deleting "${moment.title}" in ${countdown} seconds`, {
             id: toastId,
-            description: `Click undo to restore, or wait ${countdown} seconds to confirm deletion`,
+            description: "Click Undo to cancel deletion",
             action: {
               label: "Undo",
               onClick: () => {
                 isUndone = true;
-                clearTimeout(deleteTimer);
                 clearInterval(countdownInterval);
+                clearTimeout(deleteTimer);
+                toast.dismiss(toastId);
                 toast.success("Deletion cancelled", {
-                  description: "Your moment has been restored",
+                  description: `"${moment.title}" has been restored`,
+                  duration: 1000,
                 });
               },
             },
@@ -113,22 +131,18 @@ export function MomentTile({
         }
       }, 1000);
 
-      // Set up auto-delete timer (5 seconds)
+      // Set up auto-delete timer
       const deleteTimer = setTimeout(() => {
         if (!isUndone) {
           clearInterval(countdownInterval);
           toast.dismiss(toastId);
+          toast.success(`"${moment.title}" deleted`, {
+            description: "Item has been permanently removed",
+            duration: 1000,
+          });
           onDelete(moment);
         }
       }, 5000);
-    }
-  };
-
-  // Handle keyboard interaction
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-      handleClick();
     }
   };
 
@@ -147,7 +161,6 @@ export function MomentTile({
         tileVariants[status]
       )}
       onClick={handleClick}
-      onKeyDown={handleKeyDown}
       tabIndex={0}
       role="button"
       aria-label={`${moment.title}${
@@ -191,12 +204,14 @@ export function MomentTile({
         >
           <span className="flex-1 truncate">{moment.title}</span>
           {moment.isRepeating && (
-            <Repeat className={cn(
-              "h-3 w-3 flex-shrink-0",
-              status === "today" && "text-accent-foreground opacity-80",
-              status === "future" && "text-primary opacity-80",
-              status === "past" && "text-muted-foreground opacity-60"
-            )} />
+            <Repeat
+              className={cn(
+                "h-3 w-3 flex-shrink-0",
+                status === "today" && "text-accent-foreground opacity-80",
+                status === "future" && "text-primary opacity-80",
+                status === "past" && "text-muted-foreground opacity-60"
+              )}
+            />
           )}
           {status === "today" && <span className="flex-shrink-0">🎉</span>}
         </CardTitle>
@@ -226,11 +241,10 @@ export function MomentTile({
             status === "past" && "text-muted-foreground/70"
           )}
         >
-          {datePrefix}{formattedDate}
+          {datePrefix}
+          {formattedDate}
         </p>
       </CardFooter>
     </Card>
   );
 }
-
-
