@@ -5,27 +5,8 @@
   "theme_color": "#6366f1",
   "background_color": "#ffffff",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "scope": "/",
-  "start_url": "/?source=pwa",
-  "id": "life-moments-tracker",
-  "lang": "en",
-  "dir": "ltr",
-  "categories": ["productivity", "lifestyle", "utilities"],
-  "prefer_related_applications": false,
-  "display_override": ["window-controls-overlay", "standalone", "minimal-ui"],
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "screenshots": [
-    {
-      "src": "/img/icon-512-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Life Moments Tracker main screen"
-    }
-  ],
+  "start_url": "/",
   "icons": [
     {
       "src": "/img/icon-48-48.png",
