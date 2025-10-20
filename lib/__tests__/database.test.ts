@@ -160,7 +160,7 @@ describe('Data Validation', () => {
     const invalidData: Partial<MomentDocument> = {
       title: 'Test',
       date: '2024-03-15',
-      repeatFrequency: 'invalid' as any,
+      repeatFrequency: 'invalid' as RepeatFrequency,
     };
 
     expect(() => validateMomentData(invalidData)).toThrow(DatabaseError);
@@ -174,7 +174,7 @@ describe('Data Validation', () => {
       const validData: Partial<MomentDocument> = {
         title: 'Test',
         date: '2024-03-15',
-        repeatFrequency: frequency as any,
+        repeatFrequency: frequency as RepeatFrequency,
       };
 
       expect(() => validateMomentData(validData)).not.toThrow();
