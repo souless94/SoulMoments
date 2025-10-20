@@ -72,7 +72,6 @@
 
 - [x] 3. Create complete static demo with full UI functionality
 
-
   - [x] 3.1 Build main page with sample data and working UI
 
     - Build main page component that renders header, banner, and grid
@@ -85,6 +84,59 @@
     - Test responsive behavior across all devices with compact tile layout
     - Verify all UI interactions work without database
     - _Requirements: 2.1, 2.2, 3.1, 5.1, 4.1, 6.1, 6.2, 6.3_
+
+- [x] 3.5. App UI Refinement and UX Improvements
+
+  - [x] 3.5.1 Implement advanced tile interactions with hover actions
+
+    - Add edit and delete icon buttons that appear on tile hover
+    - Position action buttons in top-right corner with proper spacing
+    - Implement event propagation handling to prevent tile click conflicts
+    - Use Lucide icons (Edit, Trash2) with shadcn/ui Button components
+    - Add smooth opacity transitions for button visibility
+    - Test touch interactions on mobile devices
+    - _Requirements: 2.2, 3.1, 6.1, 6.2_
+
+  - [x] 3.5.2 Enhance delete functionality with Sonner toast and undo
+
+    - Integrate Sonner toast library for modern notification system
+    - Add Toaster component to root layout for global toast management
+    - Implement delete with undo functionality using toast actions
+    - Provide 5-second window for users to cancel deletion
+    - Remove delete confirmation dialogs in favor of undo toast
+    - Handle toast dismiss events to confirm final deletion
+    - _Requirements: 6.1, 6.2, 6.3, 3.1_
+
+  - [x] 3.5.3 Refactor modal to upsert-only approach
+
+    - Remove delete functionality from modal to simplify interface
+    - Focus modal on create and update operations only
+    - Maintain upsert approach with single "Save Moment" button
+    - Use shadcn/ui Spinner component for loading states
+    - Simplify modal state management and form handling
+    - Test modal behavior for both create and edit modes
+    - _Requirements: 4.1, 4.2, 4.3, 6.1, 6.2_
+
+  - [x] 3.5.4 Implement dynamic banner with focused moment display
+
+    - Add focused moment state to banner component
+    - Enable tile click to focus moment in banner (separate from edit)
+    - Display focused moment with visual highlight (ring border)
+    - Show focused moment's countdown, title, and description
+    - Maintain default banner behavior when no moment is focused
+    - Update focused moment when edited, clear when deleted
+    - _Requirements: 5.1, 5.2, 5.3, 2.1, 2.2_
+
+  - [x] 3.5.5 Separate tile interaction behaviors
+
+    - Implement distinct click behaviors for different actions:
+      - Tile click → Focus moment in banner (countdown change)
+      - Edit button → Open modal for editing
+      - Delete button → Immediate delete with undo toast
+    - Add proper event handling to prevent interaction conflicts
+    - Ensure accessibility with proper ARIA labels and keyboard navigation
+    - Test all interaction patterns on mobile and desktop
+    - _Requirements: 2.2, 3.1, 3.4, 6.1, 6.2_
 
 - [ ] 4. Set up RxDB database and data layer
 

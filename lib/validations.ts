@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /**
  * Zod validation schema for moment form
- * Validates title (required, max 100 chars), description (optional, max 200 chars), and date (required, valid date)
+ * Validates title (required, max 100 chars), description (optional, max 200 chars), date (required, valid date), and repeat frequency
  */
 export const momentFormSchema = z.object({
   title: z
@@ -22,7 +22,9 @@ export const momentFormSchema = z.object({
     .refine((date) => {
       const parsedDate = new Date(date);
       return !isNaN(parsedDate.getTime());
-    }, 'Please enter a valid date')
+    }, 'Please enter a valid date'),
+  repeatFrequency: z
+    .enum(['none', 'daily', 'weekly', 'monthly', 'yearly'])
 });
 
 /**
@@ -38,6 +40,7 @@ export const momentDocumentSchema = z.object({
   title: z.string().min(1).max(100),
   description: z.string().max(200).optional(),
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be in YYYY-MM-DD format'),
+  repeatFrequency: z.enum(['none', 'daily', 'weekly', 'monthly', 'yearly']),
   createdAt: z.number(),
   updatedAt: z.number()
 });

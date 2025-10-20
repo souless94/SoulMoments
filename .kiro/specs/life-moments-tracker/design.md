@@ -74,12 +74,18 @@ export interface Moment extends MomentDocument {
 
 ### Core Components
 
-#### 1. Tile Component (shadcn/ui Card)
+#### 1. Enhanced Tile Component (shadcn/ui Card with Advanced Interactions)
 - **Purpose**: Compact visual representation of a single moment using Card component
 - **Layout**: Card with CardHeader (title + today emoji), CardContent (description), and CardFooter (date)
-- **Size**: Smaller, more compact tiles optimized for mobile viewing
+- **Size**: Smaller, more compact tiles optimized for mobile viewing (min-h-[100px])
 - **States**: Past events (muted variant), future events (primary variant), today (accent variant with emoji)
-- **Interactions**: Tap to edit/delete, accessible keyboard navigation
+- **Advanced Interactions**: 
+  - Tile click → Focus moment in banner (countdown change)
+  - Hover → Show edit/delete action buttons in top-right corner
+  - Edit button → Open modal for editing (event propagation stopped)
+  - Delete button → Immediate delete with undo toast (event propagation stopped)
+- **Action Buttons**: Lucide icons (Edit, Trash2) with shadcn/ui Button components
+- **Accessibility**: Proper ARIA labels, keyboard navigation, and touch-friendly interactions
 
 #### 2. Tile Grid
 - **Layout**: CSS Grid with responsive columns (2 on mobile, 3 on tablet, 4-6 on desktop)
@@ -87,21 +93,28 @@ export interface Moment extends MomentDocument {
 - **Sorting**: Chronological order with upcoming events first, then past events
 - **Performance**: Virtual scrolling for large collections (100+ moments)
 
-#### 3. Moment Banner
+#### 3. Dynamic Moment Banner with Focus Capability
 - **Purpose**: Prominent display of key moment information at the top of the page
-- **Content**: Today's moments, next upcoming moment, recent past moment, and summary statistics
+- **Default Content**: Today's moments, next upcoming moment, recent past moment, and summary statistics
+- **Focused Mode**: When tile is clicked, banner highlights that specific moment with:
+  - Visual ring border (ring-2 ring-primary/30)
+  - Focused moment's countdown, title, and description
+  - Appropriate emoji based on moment status
 - **Design**: Gradient background with emoji icons and responsive layout
+- **State Management**: Maintains focused moment state, updates on edit, clears on delete
 - **Visibility**: Only shown when moments exist, hidden for empty state
 
-#### 4. Add/Edit Modal (shadcn/ui Dialog with React Hook Form)
+#### 4. Simplified Upsert Modal (shadcn/ui Dialog with React Hook Form)
 - **Components**: Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 - **Form Management**: React Hook Form with useForm hook for comprehensive state management
+- **Upsert Approach**: Single interface for both create and edit operations
 - **Fields**: 
   - Title: Input component with validation (required, max 100 chars)
   - Description: Input component for optional short description (max 200 chars)
   - Date: Native HTML5 date input with Label, integrated with react-hook-form
 - **Validation**: Enhanced Zod schema validation with real-time error feedback for all fields
-- **Actions**: Button components for Save/Cancel/Delete with proper variants and form submission handling
+- **Actions**: Simplified to Save/Cancel only (delete moved to tile actions)
+- **Loading States**: shadcn/ui Spinner component for form submission feedback
 - **Mobile UX**: Responsive dialog that adapts to screen size
 - **Error Handling**: Field-level and form-level error display using shadcn/ui error styling
 
@@ -109,6 +122,18 @@ export interface Moment extends MomentDocument {
 - **Elements**: App title, Button component for Add action
 - **Mobile**: Sticky header with touch-friendly Button sizes (44px minimum)
 - **Accessibility**: Proper ARIA labels and keyboard navigation
+
+#### 6. Toast Notification System (Sonner Integration)
+- **Library**: Sonner for modern, accessible toast notifications
+- **Integration**: Toaster component in root layout for global management
+- **Delete Workflow**: 
+  - Immediate success toast with undo action button
+  - 5-second duration for user consideration
+  - Undo button cancels deletion with confirmation toast
+  - Auto-dismiss triggers actual deletion
+- **Toast Actions**: Action buttons with proper event handling
+- **Accessibility**: Screen reader compatible with proper ARIA attributes
+- **Visual Design**: Consistent with shadcn/ui theme and styling
 
 ## Data Models
 
@@ -297,22 +322,52 @@ export function AddMomentModal({ open, onOpenChange, onSubmit }) {
 }
 ```
 
-### Tile Design with shadcn/ui Components
+### Enhanced Tile Design with Hover Actions
 ```typescript
-// MomentTile component using shadcn/ui Card
+// MomentTile component with advanced interactions
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Edit, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
 const tileVariants = {
-  past: "bg-muted text-muted-foreground",
-  today: "bg-accent text-accent-foreground ring-2 ring-primary",
-  future: "bg-primary text-primary-foreground"
+  past: "bg-muted/50 text-muted-foreground border-muted hover:bg-muted/70",
+  today: "bg-accent text-accent-foreground border-accent ring-2 ring-primary/20 hover:bg-accent/90",
+  future: "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
 };
 
-// Component structure - Compact design
-<Card className={cn("transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] cursor-pointer min-h-[100px]", tileVariants[status])}>
+// Component structure - Enhanced with hover actions
+<Card className={cn(
+  "transition-all duration-200 cursor-pointer select-none relative group",
+  "hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01]",
+  "min-h-[100px] active:scale-[0.99]",
+  tileVariants[status]
+)}>
+  {/* Action buttons - show on hover */}
+  <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex gap-1">
+    <Button
+      size="sm"
+      variant="secondary"
+      className="h-6 w-6 p-0"
+      onClick={handleEdit}
+      aria-label="Edit moment"
+    >
+      <Edit className="h-3 w-3" />
+    </Button>
+    <Button
+      size="sm"
+      variant="destructive"
+      className="h-6 w-6 p-0"
+      onClick={handleDelete}
+      aria-label="Delete moment"
+    >
+      <Trash2 className="h-3 w-3" />
+    </Button>
+  </div>
+
   <CardHeader className="pb-1 px-3 pt-3">
-    <CardTitle className="text-sm font-semibold leading-tight line-clamp-2">
+    <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 pr-16">
       {title}
       {status === 'today' && <span className="ml-1">🎉</span>}
     </CardTitle>
@@ -327,9 +382,51 @@ const tileVariants = {
   </CardFooter>
 </Card>
 
+// Delete with undo toast implementation
+const handleDelete = (e: React.MouseEvent) => {
+  e.stopPropagation(); // Prevent tile click
+  
+  toast.success(`"${moment.title}" deleted`, {
+    action: {
+      label: "Undo",
+      onClick: () => toast.success("Deletion cancelled"),
+    },
+    onDismiss: () => onDelete(moment),
+    duration: 5000,
+  });
+};
+
 // Responsive grid classes - More columns for compact tiles
 const gridClasses = "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 p-4";
 ```
+
+### Interaction Patterns and User Experience
+
+#### Tile Interaction Behaviors
+- **Primary Click**: Focus moment in banner (changes countdown display)
+- **Hover State**: Reveal edit and delete action buttons with smooth opacity transition
+- **Edit Action**: Opens modal pre-filled with moment data for editing
+- **Delete Action**: Immediate deletion with 5-second undo toast notification
+- **Event Handling**: Proper event propagation control to prevent conflicts
+
+#### Banner Focus System
+- **Default State**: Shows overview of today's moments, next upcoming, and recent past
+- **Focused State**: Highlights clicked moment with visual ring and detailed information
+- **State Persistence**: Maintains focus until another moment is clicked or focused moment is deleted
+- **Visual Feedback**: Ring border and enhanced styling for focused moment display
+
+#### Modal Workflow
+- **Create Mode**: Clean form with today's date as default
+- **Edit Mode**: Pre-populated form with existing moment data
+- **Validation**: Real-time feedback with Zod schema validation
+- **Loading States**: Spinner feedback during form submission
+- **Error Handling**: Field-level and form-level error display
+
+#### Toast Notification System
+- **Delete Confirmation**: Success toast with undo action button
+- **Undo Window**: 5-second duration for user reconsideration
+- **Action Feedback**: Confirmation toasts for undo and final deletion
+- **Accessibility**: Screen reader compatible with proper ARIA attributes
 
 ### Responsive Breakpoints
 - **Mobile**: < 640px (2 columns for better space utilization)

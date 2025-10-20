@@ -3,6 +3,11 @@
  */
 
 /**
+ * Repeat frequency options for moments
+ */
+export type RepeatFrequency = 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
+
+/**
  * Base moment document structure (matches RxDB schema)
  */
 export interface MomentDocument {
@@ -10,6 +15,7 @@ export interface MomentDocument {
   title: string;        // User-provided title (max 100 characters)
   description?: string; // Optional short description (max 200 characters)
   date: string;         // ISO date string (YYYY-MM-DD)
+  repeatFrequency: RepeatFrequency; // How often this moment repeats
   createdAt: number;    // Unix timestamp
   updatedAt: number;    // Unix timestamp
 }
@@ -32,6 +38,7 @@ export interface MomentFormData {
   title: string;
   description?: string;
   date: string;
+  repeatFrequency: RepeatFrequency;
 }
 
 /**

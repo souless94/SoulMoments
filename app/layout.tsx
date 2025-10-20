@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ServiceWorkerRegistration from "./components/ServiceWorkerRegistration";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,6 +48,15 @@ export default function RootLayout({
       >
         <ServiceWorkerRegistration />
         {children}
+        <Toaster
+          position="top-center"
+          closeButton
+          expand={false}
+          visibleToasts={3}
+          duration={5}
+          className="toaster"
+         
+        />
       </body>
     </html>
   );

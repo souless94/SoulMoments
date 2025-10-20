@@ -8,6 +8,7 @@
 
 import React from 'react';
 import { MomentTile } from './MomentTile';
+import { Separator } from '@/components/ui/separator';
 import { sortMomentsByDate } from '@/lib/date-utils';
 import { cn } from '@/lib/utils';
 import type { Moment, MomentGridProps } from '@/types/moment';
@@ -43,32 +44,67 @@ export function MomentGrid({
     );
   }
 
+  // Separate moments by status for better organization
+  const futureMoments = sortedMoments.filter(m => m.status === 'future');
+  const todayMoments = sortedMoments.filter(m => m.status === 'today');
+  const pastMoments = sortedMoments.filter(m => m.status === 'past');
+
+  const gridClasses = cn(
+    // Base grid layout
+    "grid gap-3 w-full",
+    // Responsive breakpoints
+    // Mobile: 2 columns (as requested)
+    "grid-cols-2",
+    // Tablet: 3 columns
+    "sm:grid-cols-3 md:grid-cols-4",
+    // Desktop: 4-5 columns
+    "lg:grid-cols-5 xl:grid-cols-6",
+    // Auto-fit for very large screens with smaller minimum width
+    "2xl:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]"
+  );
+
   return (
-    <div className={cn(
-      // Base grid layout
-      "grid gap-3 w-full",
-      // Responsive breakpoints
-      // Mobile: 2 columns (as requested)
-      "grid-cols-2",
-      // Tablet: 3 columns
-      "sm:grid-cols-3 md:grid-cols-4",
-      // Desktop: 4-5 columns
-      "lg:grid-cols-5 xl:grid-cols-6",
-      // Spacing and padding
-      "p-4",
-      // Auto-fit for very large screens with smaller minimum width
-      "2xl:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]",
-      className
-    )}>
-      {sortedMoments.map((moment) => (
-        <MomentTile
-          key={moment.id}
-          moment={moment}
-          onClick={onMomentClick}
-          onEdit={onMomentEdit}
-          onDelete={onMomentDelete}
-        />
-      ))}
+    <div className={cn("w-full p-4", className)}>
+      {/* Future and Today moments */}
+      {(futureMoments.length > 0 || todayMoments.length > 0) && (
+        <div className={gridClasses}>
+          {[...todayMoments, ...futureMoments].map((moment) => (
+            <MomentTile
+              key={moment.id}
+              moment={moment}
+              onClick={onMomentClick}
+              onEdit={onMomentEdit}
+              onDelete={onMomentDelete}
+            />
+          ))}
+        </div>
+      )}
+
+      {/* Separator for past moments */}
+      {pastMoments.length > 0 && (futureMoments.length > 0 || todayMoments.length > 0) && (
+        <div className="my-8">
+          <div className="flex items-center gap-4">
+            <Separator className="flex-1" />
+            <span className="text-sm text-muted-foreground font-medium">Past Moments</span>
+            <Separator className="flex-1" />
+          </div>
+        </div>
+      )}
+
+      {/* Past moments */}
+      {pastMoments.length > 0 && (
+        <div className={gridClasses}>
+          {pastMoments.map((moment) => (
+            <MomentTile
+              key={moment.id}
+              moment={moment}
+              onClick={onMomentClick}
+              onEdit={onMomentEdit}
+              onDelete={onMomentDelete}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -83,6 +119,7 @@ export function MomentGridDemo() {
       id: '1',
       title: 'Wedding Anniversary',
       date: new Date().toISOString().split('T')[0], // Today
+      repeatFrequency: 'yearly',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: 0,
@@ -93,6 +130,7 @@ export function MomentGridDemo() {
       id: '2',
       title: 'Trip to Japan',
       date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: 30,
@@ -103,6 +141,7 @@ export function MomentGridDemo() {
       id: '3',
       title: 'Started New Job',
       date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days ago
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: -90,
@@ -113,6 +152,7 @@ export function MomentGridDemo() {
       id: '4',
       title: 'Birthday Party',
       date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+      repeatFrequency: 'yearly',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: 7,
@@ -123,6 +163,7 @@ export function MomentGridDemo() {
       id: '5',
       title: 'Graduation Day',
       date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year ago
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: -365,
@@ -133,6 +174,7 @@ export function MomentGridDemo() {
       id: '6',
       title: 'Summer Vacation',
       date: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 120 days from now
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: 120,
@@ -143,6 +185,7 @@ export function MomentGridDemo() {
       id: '7',
       title: 'First Date',
       date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: -30,
@@ -153,6 +196,7 @@ export function MomentGridDemo() {
       id: '8',
       title: 'Marathon Race',
       date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 60 days from now
+      repeatFrequency: 'none',
       createdAt: Date.now(),
       updatedAt: Date.now(),
       daysDifference: 60,

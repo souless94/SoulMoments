@@ -11,13 +11,14 @@ import type { Moment } from '@/types/moment';
 
 export interface MomentBannerProps {
   moments: Moment[];
+  focusedMoment?: Moment | null;
   className?: string;
 }
 
 /**
  * Banner component showing moment statistics and highlights
  */
-export function MomentBanner({ moments, className }: MomentBannerProps) {
+export function MomentBanner({ moments, focusedMoment, className }: MomentBannerProps) {
   // Calculate statistics
   const todayMoments = moments.filter(m => m.status === 'today');
   const futureMoments = moments.filter(m => m.status === 'future').sort((a, b) => a.daysDifference - b.daysDifference);
@@ -35,63 +36,83 @@ export function MomentBanner({ moments, className }: MomentBannerProps) {
   return (
     <div className={cn(
       "bg-gradient-to-r from-primary/10 via-accent/10 to-primary/10 border rounded-lg p-4 mb-6",
+      focusedMoment && "ring-2 ring-primary/30",
       className
     )}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        {/* Today's moments */}
-        {todayMoments.length > 0 && (
+        {/* Focused moment - takes priority when clicked */}
+        {focusedMoment && (
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🎉</span>
+            <span className="text-2xl">
+              {focusedMoment.status === 'today' ? '🎉' : 
+               focusedMoment.status === 'future' ? '⏰' : '📅'}
+            </span>
             <div>
-              <p className="font-semibold text-accent-foreground">
-                {todayMoments.length === 1 ? 'Today!' : `${todayMoments.length} moments today!`}
+              <p className={cn(
+                "font-semibold",
+                focusedMoment.status === 'today' && "text-accent-foreground",
+                focusedMoment.status === 'future' && "text-primary",
+                focusedMoment.status === 'past' && "text-muted-foreground"
+              )}>
+                {focusedMoment.displayText}
               </p>
               <p className="text-sm text-muted-foreground">
-                {todayMoments.map(m => m.title).join(', ')}
+                {focusedMoment.title}
+                {focusedMoment.description && ` - ${focusedMoment.description}`}
               </p>
             </div>
           </div>
         )}
 
-        {/* Next upcoming moment */}
-        {nextMoment && (
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⏰</span>
-            <div>
-              <p className="font-medium text-primary">
-                {nextMoment.displayText}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {nextMoment.title}
-              </p>
-            </div>
-          </div>
-        )}
+        {/* Default content when no focused moment */}
+        {!focusedMoment && (
+          <>
+            {/* Today's moments */}
+            {todayMoments.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🎉</span>
+                <div>
+                  <p className="font-semibold text-accent-foreground">
+                    {todayMoments.length === 1 ? 'Today!' : `${todayMoments.length} moments today!`}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {todayMoments.map(m => m.title).join(', ')}
+                  </p>
+                </div>
+              </div>
+            )}
 
-        {/* Recent past moment */}
-        {recentMoment && !todayMoments.length && (
-          <div className="flex items-center gap-2">
-            <span className="text-xl">📅</span>
-            <div>
-              <p className="font-medium text-muted-foreground">
-                {recentMoment.displayText}
-              </p>
-              <p className="text-sm text-muted-foreground">
-                {recentMoment.title}
-              </p>
-            </div>
-          </div>
-        )}
+            {/* Next upcoming moment */}
+            {nextMoment && (
+              <div className="flex items-center gap-2">
+                <span className="text-xl">⏰</span>
+                <div>
+                  <p className="font-medium text-primary">
+                    {nextMoment.displayText}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {nextMoment.title}
+                  </p>
+                </div>
+              </div>
+            )}
 
-        {/* Summary stats */}
-        <div className="flex items-center gap-4 text-sm text-muted-foreground">
-          {futureMoments.length > 0 && (
-            <span>{futureMoments.length} upcoming</span>
-          )}
-          {pastMoments.length > 0 && (
-            <span>{pastMoments.length} past</span>
-          )}
-        </div>
+            {/* Recent past moment */}
+            {recentMoment && !todayMoments.length && (
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📅</span>
+                <div>
+                  <p className="font-medium text-muted-foreground">
+                    {recentMoment.displayText}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {recentMoment.title}
+                  </p>
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );
