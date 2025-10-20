@@ -1,5 +1,5 @@
 /**
- * Header component with app title and add moment button
+ * Header component with app title and PWA install button
  * Responsive design with mobile-friendly navigation
  * Uses shadcn/ui Button component with proper accessibility
  */
@@ -7,25 +7,17 @@
 'use client';
 
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { PWAInstallIcon } from './PWAInstallButton';
 import { cn } from '@/lib/utils';
 
 export interface HeaderProps {
-  onAddMoment?: () => void;
   className?: string;
 }
 
 /**
  * Main header component for the Life Moments Tracker app
  */
-export function Header({ onAddMoment, className }: HeaderProps) {
-  const handleAddClick = () => {
-    if (onAddMoment) {
-      onAddMoment();
-    } else {
-      console.log('Add moment clicked');
-    }
-  };
+export function Header({ className }: HeaderProps) {
 
   return (
     <header className={cn(
@@ -41,6 +33,11 @@ export function Header({ onAddMoment, className }: HeaderProps) {
           <p className="hidden sm:block text-sm text-muted-foreground">
             Track your important life events
           </p>
+        </div>
+
+        {/* PWA Install Button */}
+        <div className="flex items-center gap-2">
+          <PWAInstallIcon />
         </div>
 
       </div>

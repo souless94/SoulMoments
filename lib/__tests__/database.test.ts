@@ -12,7 +12,7 @@ import {
   validateMomentData,
   DatabaseError,
   momentSchema
-} from '../database';
+} from '../moments-db';
 import type { MomentDocument } from '@/types/moment';
 
 // Mock RxDB and Dexie for testing

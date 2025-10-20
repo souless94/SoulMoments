@@ -1,20 +1,26 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { toast } from 'sonner';
+import React from "react";
+import { toast } from "sonner";
 
-import { Header } from './components/Header';
-import { MomentGrid } from './components/MomentGrid';
-import { MomentBanner } from './components/MomentBanner';
-import { MomentModal } from './components/MomentModal';
-import { FloatingAddButton } from './components/FloatingAddButton';
+import { Header } from "./components/Header";
+import { MomentGrid } from "./components/MomentGrid";
+import { MomentBanner } from "./components/MomentBanner";
+import { MomentModal } from "./components/MomentModal";
+import { FloatingAddButton } from "./components/FloatingAddButton";
+import { PWAInstallBanner } from "./components/PWAInstallButton";
 
-import { initDB, generateId } from '@/lib/moments-db';
-import type { Moment, MomentFormData, MomentDocument } from '@/types/moment';
-import { useMomentsDB } from '@/hooks/useMoment';
+import { initDB, generateId } from "@/lib/moments-db";
+import type { Moment, MomentFormData, MomentDocument } from "@/types/moment";
+import { useMomentsDB } from "@/hooks/useMoment";
 
 export default function Home() {
-  const { moments, loading: dbLoading, error: dbError, setMoments } = useMomentsDB();
+  const {
+    moments,
+    loading: dbLoading,
+    error: dbError,
+    setMoments,
+  } = useMomentsDB();
 
   // Modal & focused states
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -23,13 +29,22 @@ export default function Home() {
   const [isLoading, setIsLoading] = React.useState(false);
 
   // Add / Edit / Delete handlers
-  const handleAddMoment = () => { setEditingMoment(null); setIsModalOpen(true); };
+  const handleAddMoment = () => {
+    setEditingMoment(null);
+    setIsModalOpen(true);
+  };
   const handleMomentClick = (moment: Moment) => setFocusedMoment(moment);
-  const handleMomentEdit = (moment: Moment) => { setEditingMoment(moment); setIsModalOpen(true); };
+  const handleMomentEdit = (moment: Moment) => {
+    setEditingMoment(moment);
+    setIsModalOpen(true);
+  };
 
   const handleMomentDelete = (moment: Moment) => {
     toast.success(`"${moment.title}" deleted`, {
-      action: { label: "Undo", onClick: () => toast.success("Deletion cancelled") },
+      action: {
+        label: "Undo",
+        onClick: () => toast.success("Deletion cancelled"),
+      },
       onDismiss: async () => {
         try {
           const db = await initDB();
@@ -37,7 +52,7 @@ export default function Home() {
           if (doc) await doc.remove();
         } catch (err) {
           console.error(err);
-          toast.error('Failed to delete moment');
+          toast.error("Failed to delete moment");
         }
       },
       duration: 5000,
@@ -54,13 +69,15 @@ export default function Home() {
       if (editingMoment) {
         const doc = await db.moments.findOne(editingMoment.id).exec();
         if (doc) {
-          await doc.update({ $set: { 
-            title: data.title.trim(),
-            description: data.description?.trim() || undefined,
-            date: data.date,
-            repeatFrequency: data.repeatFrequency || 'none',
-            updatedAt: new Date().toISOString(),
-          }});
+          await doc.update({
+            $set: {
+              title: data.title.trim(),
+              description: data.description?.trim() || undefined,
+              date: data.date,
+              repeatFrequency: data.repeatFrequency || "none",
+              updatedAt: new Date().toISOString(),
+            },
+          });
           toast.success("Moment updated successfully");
         }
       } else {
@@ -70,7 +87,7 @@ export default function Home() {
           title: data.title.trim(),
           description: data.description?.trim() || undefined,
           date: data.date,
-          repeatFrequency: data.repeatFrequency || 'none',
+          repeatFrequency: data.repeatFrequency || "none",
           createdAt: now,
           updatedAt: now,
         } as MomentDocument);
@@ -94,11 +111,19 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto py-8 pb-24">
+        <div className="px-4">
+          <PWAInstallBanner />
+        </div>
+
         {moments.length > 0 && (
           <div className="mb-6 px-4">
             <h2 className="text-2xl font-semibold mb-2">Your Moments</h2>
-            <p className="text-muted-foreground">Track your important life events and see how time flows.</p>
-            <p className="text-sm text-muted-foreground mt-2">{moments.length} moment{moments.length !== 1 ? 's' : ''} tracked</p>
+            <p className="text-muted-foreground">
+              Track your important life events and see how time flows.
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">
+              {moments.length} moment{moments.length !== 1 ? "s" : ""} tracked
+            </p>
           </div>
         )}
 
@@ -115,7 +140,10 @@ export default function Home() {
 
         <MomentModal
           open={isModalOpen}
-          onOpenChange={(open) => { if (!open) setEditingMoment(null); setIsModalOpen(open); }}
+          onOpenChange={(open) => {
+            if (!open) setEditingMoment(null);
+            setIsModalOpen(open);
+          }}
           onSubmit={handleFormSubmit}
           editingMoment={editingMoment}
           isLoading={isLoading}
@@ -131,7 +159,9 @@ function LoadingScreen() {
     <div className="min-h-screen bg-background flex items-center justify-center">
       <div className="text-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-2"></div>
-        <p className="text-sm text-muted-foreground">Connecting to database...</p>
+        <p className="text-sm text-muted-foreground">
+          Connecting to database...
+        </p>
       </div>
     </div>
   );
