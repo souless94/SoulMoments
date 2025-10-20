@@ -45,9 +45,16 @@ export function MomentGrid({
   }
 
   // Separate moments by status for better organization
-  const futureMoments = sortedMoments.filter(m => m.status === 'future');
-  const todayMoments = sortedMoments.filter(m => m.status === 'today');
-  const pastMoments = sortedMoments.filter(m => m.status === 'past');
+  // Repeating events are always considered "upcoming" since they repeat
+  const futureMoments = sortedMoments.filter(m => 
+    m.status === 'future' || (m.repeatFrequency && m.repeatFrequency !== 'none')
+  );
+  const todayMoments = sortedMoments.filter(m => 
+    m.status === 'today' && (!m.repeatFrequency || m.repeatFrequency === 'none')
+  );
+  const pastMoments = sortedMoments.filter(m => 
+    m.status === 'past' && (!m.repeatFrequency || m.repeatFrequency === 'none')
+  );
 
   const gridClasses = cn(
     // Base grid layout

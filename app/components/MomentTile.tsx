@@ -61,28 +61,64 @@ export function MomentTile({
     }
   };
 
-  // Handle delete with undo toast
+  // Handle delete with undo toast and countdown
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tile click
 
     if (onDelete) {
-      // Show toast with undo option and close action
-      toast.success(`"${moment.title}" deleted`, {
-        description: "Click undo to restore, or close to confirm deletion",
+      let isUndone = false;
+      let countdown = 5;
+
+      // Show initial toast
+      const toastId = toast.success(`"${moment.title}" deleted`, {
+        description: `Click undo to restore, or wait ${countdown} seconds to confirm deletion`,
         action: {
           label: "Undo",
           onClick: () => {
+            isUndone = true;
+            clearTimeout(deleteTimer);
+            clearInterval(countdownInterval);
             toast.success("Deletion cancelled", {
               description: "Your moment has been restored",
             });
           },
         },
-        onDismiss: () => {
-          // Actually delete when toast is dismissed without undo
-          onDelete(moment);
-        },
-        duration: 5000, // Give user 5 seconds to undo
+        duration: 5000, // Standard 5 second duration
       });
+
+      // Update countdown every second
+      const countdownInterval = setInterval(() => {
+        countdown--;
+        if (countdown > 0 && !isUndone) {
+          toast.success(`"${moment.title}" deleted`, {
+            id: toastId,
+            description: `Click undo to restore, or wait ${countdown} seconds to confirm deletion`,
+            action: {
+              label: "Undo",
+              onClick: () => {
+                isUndone = true;
+                clearTimeout(deleteTimer);
+                clearInterval(countdownInterval);
+                toast.success("Deletion cancelled", {
+                  description: "Your moment has been restored",
+                });
+              },
+            },
+            duration: 5000,
+          });
+        } else {
+          clearInterval(countdownInterval);
+        }
+      }, 1000);
+
+      // Set up auto-delete timer (5 seconds)
+      const deleteTimer = setTimeout(() => {
+        if (!isUndone) {
+          clearInterval(countdownInterval);
+          toast.dismiss(toastId);
+          onDelete(moment);
+        }
+      }, 5000);
     }
   };
 

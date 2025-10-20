@@ -12,6 +12,8 @@ The Life Moments Tracker is a simple web application designed to help users trac
 - **Offline_Storage**: Local browser storage that persists data without internet connectivity
 - **Mobile_Interface**: Touch-optimized user interface designed for smartphone and tablet devices
 - **Tile**: A visual card component displaying a moment's title, date, and day count information
+- **Repeat_Frequency**: The recurring pattern for a moment (none, daily, weekly, monthly, yearly)
+- **Next_Occurrence**: The calculated future date when a repeat moment will happen again
 
 
 ## Requirements
@@ -75,6 +77,8 @@ The Life Moments Tracker is a simple web application designed to help users trac
 3. WHEN a moment date is in the future, THE Life_Moments_Tracker SHALL show "X days until" on the Tile
 4. WHEN a moment date is today, THE Life_Moments_Tracker SHALL show "Today" on the Tile
 5. THE Life_Moments_Tracker SHALL update day counts automatically when the date changes
+6. WHEN a moment has repeat frequency set, THE Life_Moments_Tracker SHALL always display it in the upcoming section regardless of the original date
+7. WHEN a repeat moment is displayed, THE Life_Moments_Tracker SHALL show the time until the next occurrence of the event
 
 ### Requirement 6
 
@@ -87,3 +91,15 @@ The Life Moments Tracker is a simple web application designed to help users trac
 3. WHEN the User deletes a moment, THE Life_Moments_Tracker SHALL ask for confirmation before removal
 4. THE Life_Moments_Tracker SHALL immediately update the Tile display after edits are saved
 5. THE Life_Moments_Tracker SHALL persist all changes to Offline_Storage
+
+### Requirement 7
+
+**User Story:** As a user, I want to set repeat frequencies for recurring events, so that I can track anniversaries and regular occasions without creating multiple entries.
+
+#### Acceptance Criteria
+
+1. WHEN the User creates or edits a moment, THE Life_Moments_Tracker SHALL provide repeat frequency options including none, daily, weekly, monthly, and yearly
+2. WHEN a moment has a repeat frequency, THE Life_Moments_Tracker SHALL calculate and display the next occurrence date
+3. THE Life_Moments_Tracker SHALL display repeat moments with a visual indicator to distinguish them from one-time events
+4. WHEN displaying repeat moments in the banner, THE Life_Moments_Tracker SHALL show the countdown to the next occurrence
+5. THE Life_Moments_Tracker SHALL always categorize repeat moments as upcoming events regardless of their original date

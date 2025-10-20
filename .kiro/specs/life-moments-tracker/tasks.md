@@ -138,17 +138,103 @@
     - Test all interaction patterns on mobile and desktop
     - _Requirements: 2.2, 3.1, 3.4, 6.1, 6.2_
 
-- [ ] 4. Set up RxDB database and data layer
+  - [x] 3.5.6 Implement compact tile design and mobile optimizations
 
-  - [ ] 4.1 Configure RxDB with Dexie.js storage
+    - Reduce tile height from 100px to 80px for more compact layout
+    - Convert title and description to single-line display (line-clamp-1)
+    - Optimize padding and spacing throughout tile components
+    - Remove hover-dependent interactions for better mobile experience
+    - Make action buttons always visible with subtle opacity (80%)
+    - Test compact design across all responsive breakpoints
+    - _Requirements: 2.1, 2.2, 2.3, 3.1_
+
+  - [x] 3.5.7 Add floating action button for better mobile UX
+
+    - Create FloatingAddButton component with circular design
+    - Position at bottom-right with proper z-index and spacing
+    - Use Lucide Plus icon with responsive sizing (14x14 mobile, 12x12 desktop)
+    - Add smooth hover effects with scale and shadow transitions
+    - Remove add button from header to reduce clutter
+    - Add bottom padding to main content to prevent overlap
+    - _Requirements: 2.2, 3.1, 3.4_
+
+  - [x] 3.5.8 Implement visual separation with past moments separator
+
+    - Update MomentGrid to group moments by status (current/future vs past)
+    - Add elegant separator with "Past Moments" label using shadcn/ui Separator
+    - Show current and future moments first, then past moments below separator
+    - Only display separator when both current/future and past moments exist
+    - Use proper spacing and typography for visual hierarchy
+    - _Requirements: 5.1, 5.2, 5.3, 2.1, 2.2_
+
+  - [x] 3.5.9 Add comprehensive repeat functionality with shadcn Select
+
+    - Implement RepeatFrequency type with options: none, daily, weekly, monthly, yearly
+    - Add shadcn/ui Select component to modal with clear option labels
+    - Include visual repeat indicator (Repeat icon) on tiles for repeating moments
+    - Update all TypeScript interfaces and Zod validation schemas
+    - Add sample data with various repeat frequencies for testing
+    - Ensure proper form handling and state management for repeat field
+    - _Requirements: 4.1, 4.2, 4.3, 6.1, 6.2_
+
+  - [x] 3.5.10 Optimize button positioning and toast configuration
+
+    - Reposition edit button to bottom-right to prevent accidental delete clicks
+    - Keep delete button at top-right for safety (harder to accidentally click)
+    - Configure Sonner toast to appear at top-center with close button
+    - Set 5-second auto-dismiss duration for optimal user experience
+    - Use shadcn's built-in toast styling with proper className configuration
+    - Add descriptive toast messages with clear undo/close instructions
+    - _Requirements: 3.1, 3.4, 6.1, 6.2, 6.3_
+
+- [ ] 4. Implement repeat event logic and calculations
+
+  - [ ] 4.1 Update date utilities for repeat event calculations
+
+    - Create calculateNextOccurrence function for repeat frequencies (daily, weekly, monthly, yearly)
+    - Enhance calculateDayDifference to handle repeat events and return next occurrence
+    - Add logic to always treat repeat events as upcoming regardless of original date
+    - Update TypeScript interfaces to include nextOccurrence and isRepeating fields
+    - Test edge cases for leap years, month boundaries, and timezone handling
+    - _Requirements: 5.6, 5.7, 7.2, 7.4, 7.5_
+
+  - [ ] 4.2 Update moment processing and grid sorting logic
+
+    - Modify MomentGrid component to separate upcoming and past events correctly
+    - Ensure all repeat events appear in upcoming section regardless of original date
+    - Update sorting logic to handle next occurrence dates for repeat events
+    - Add visual separator between upcoming and past moments
+    - Test grid behavior with mixed repeat and non-repeat events
+    - _Requirements: 5.1, 5.6, 5.7, 7.5_
+
+  - [ ] 4.3 Enhance MomentTile component with repeat indicators
+
+    - Add Repeat icon from Lucide to tiles with repeat frequency set
+    - Update tile footer to show "Next: [date]" for repeat events instead of original date
+    - Ensure proper styling and spacing for repeat indicator icon
+    - Test tile display with various repeat frequencies and edge cases
+    - _Requirements: 5.1, 5.2, 5.3, 7.3_
+
+  - [ ] 4.4 Update MomentBanner to handle repeat events
+
+    - Modify banner logic to show countdown to next occurrence for repeat events
+    - Update focused moment display to show next occurrence information
+    - Ensure banner statistics correctly count repeat events as upcoming
+    - Test banner behavior when focusing on repeat events
+    - _Requirements: 5.1, 5.2, 5.3, 7.4_
+
+- [ ] 5. Set up RxDB database and data layer
+
+  - [ ] 5.1 Configure RxDB with Dexie.js storage and repeat frequency support
 
     - Install and configure RxDB with Dexie.js adapter
-    - Create database schema for moments collection
+    - Update database schema to include repeatFrequency field with enum validation
     - Set up database initialization and connection
-    - Add proper TypeScript interfaces for database operations
-    - _Requirements: 1.1, 1.2, 1.3_
+    - Add proper TypeScript interfaces for database operations including repeat fields
+    - Create database migration if needed for existing data
+    - _Requirements: 1.1, 1.2, 1.3, 7.1_
 
-  - [ ] 4.2 Create database service layer
+  - [ ] 5.2 Create database service layer
 
     - Build database service with CRUD operations
     - Implement reactive queries for real-time updates
@@ -156,36 +242,36 @@
     - Create custom React hooks for database interactions
     - _Requirements: 1.1, 1.2, 4.4, 6.5_
 
-  - [ ] 4.3 Write unit tests for database operations
+  - [ ] 5.3 Write unit tests for database operations
 
-    - Create tests for CRUD operations
+    - Create tests for CRUD operations including repeat frequency field
     - Test reactive query behavior
     - Mock RxDB for isolated testing
     - Test error handling scenarios
     - _Requirements: 1.1, 4.4, 6.5_
 
-- [ ] 5. Connect UI to database (replace local state with persistent storage)
+- [ ] 6. Connect UI to database (replace local state with persistent storage)
 
-  - [ ] 5.1 Replace local state with database queries
+  - [ ] 6.1 Replace local state with database queries
 
     - Connect MomentGrid to RxDB reactive queries
     - Replace sample data and local state with real database
     - Implement loading states for data fetching
-    - Test real-time updates when data changes
+    - Test real-time updates when data changes including repeat event calculations
     - _Requirements: 1.1, 1.4, 5.1, 5.5_
 
-  - [ ] 5.2 Connect form functionality to database
+  - [ ] 6.2 Connect form functionality to database with repeat frequency support
 
-    - Connect AddMomentModal to database create/update operations
+    - Connect AddMomentModal to database create/update operations including repeat frequency
     - Connect delete functionality to database delete operations
     - Add proper error handling for database operations
     - Implement success feedback for all operations
     - Test offline functionality with database persistence
-    - _Requirements: 1.1, 4.1, 4.4, 4.5, 6.1, 6.2, 6.3, 6.4, 6.5_
+    - _Requirements: 1.1, 4.1, 4.4, 4.5, 6.1, 6.2, 6.3, 6.4, 6.5, 7.1_
 
-- [ ] 6. Enhance PWA features and add polish
+- [ ] 7. Enhance PWA features and add polish
 
-  - [ ] 6.1 Enhance PWA configuration and icons
+  - [ ] 7.1 Enhance PWA configuration and icons
 
     - Create proper PWA icons in multiple sizes (192x192, 256x256, 384x384, 512x512)
     - Update manifest.json with complete metadata
@@ -193,7 +279,7 @@
     - Verify service worker caching strategies
     - _Requirements: 1.1, 1.2, 1.5_
 
-  - [ ] 6.2 Test and optimize offline functionality
+  - [ ] 7.2 Test and optimize offline functionality
 
     - Verify all features work without internet connection
     - Test data persistence across browser sessions
@@ -201,16 +287,16 @@
     - Add offline status indicators to UI using shadcn/ui components
     - _Requirements: 1.1, 1.2, 1.3, 1.4_
 
-  - [ ] 6.3 Add comprehensive error handling
+  - [ ] 7.3 Add comprehensive error handling
     - Implement error boundaries for React components
     - Add user-friendly error messages using shadcn/ui Alert components
     - Create fallback UI for error states
     - Test error scenarios and recovery
     - _Requirements: 1.5, 6.5_
 
-- [ ] 7. Final optimization and testing
+- [ ] 8. Final optimization and testing
 
-  - [ ] 7.1 Optimize performance and bundle size
+  - [ ] 8.1 Optimize performance and bundle size
 
     - Implement code splitting for modal components using dynamic imports
     - Optimize shadcn/ui and Tailwind CSS bundle size
@@ -218,7 +304,7 @@
     - Test performance with large datasets and virtual scrolling if needed
     - _Requirements: 2.2, 3.2, 3.4_
 
-  - [ ] 7.2 Enhance mobile user experience
+  - [ ] 8.2 Enhance mobile user experience
 
     - Fine-tune touch interactions and gestures
     - Optimize keyboard behavior on mobile
@@ -226,7 +312,7 @@
     - Ensure proper viewport handling
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 7.3 Add accessibility improvements (leveraging shadcn/ui accessibility)
+  - [ ] 8.3 Add accessibility improvements (leveraging shadcn/ui accessibility)
 
     - Verify shadcn/ui components have proper ARIA labels and roles
     - Ensure keyboard navigation works throughout app using Radix UI primitives
@@ -234,7 +320,7 @@
     - Verify color contrast meets WCAG standards with shadcn/ui theme
     - _Requirements: 3.3, 3.5_
 
-  - [ ] 7.4 Create end-to-end tests
+  - [ ] 8.4 Create end-to-end tests
 
     - Write E2E tests for core user flows
     - Test PWA installation and offline functionality

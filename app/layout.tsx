@@ -53,7 +53,6 @@ export default function RootLayout({
           closeButton
           expand={false}
           visibleToasts={3}
-          duration={5}
           className="toaster"
          
         />

@@ -60,15 +60,18 @@ export interface MomentDocument {
   title: string;        // User-provided title (max 100 characters)
   description?: string; // Optional short description (max 200 characters)
   date: string;         // ISO date string (YYYY-MM-DD)
+  repeatFrequency: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'; // Repeat pattern
   createdAt: number;    // Unix timestamp
   updatedAt: number;    // Unix timestamp
 }
 
 // TypeScript interface for components
 export interface Moment extends MomentDocument {
-  daysDifference: number;  // Calculated field
+  daysDifference: number;  // Calculated field (to next occurrence for repeating events)
   displayText: string;     // "X days ago" / "X days until" / "Today"
   status: 'past' | 'today' | 'future';  // Status for styling and logic
+  nextOccurrence?: string; // ISO date string for next occurrence (repeat events only)
+  isRepeating: boolean;    // Convenience flag for repeat events
 }
 ```
 
@@ -90,15 +93,19 @@ export interface Moment extends MomentDocument {
 #### 2. Tile Grid
 - **Layout**: CSS Grid with responsive columns (2 on mobile, 3 on tablet, 4-6 on desktop)
 - **Spacing**: Tighter gap (12px) for more compact layout
-- **Sorting**: Chronological order with upcoming events first, then past events
+- **Sorting**: Upcoming events first (including all repeat events), then past events
+- **Repeat Event Handling**: All repeat events appear in upcoming section regardless of original date
+- **Visual Separation**: "Past Moments" separator between upcoming and past events
 - **Performance**: Virtual scrolling for large collections (100+ moments)
 
 #### 3. Dynamic Moment Banner with Focus Capability
 - **Purpose**: Prominent display of key moment information at the top of the page
 - **Default Content**: Today's moments, next upcoming moment, recent past moment, and summary statistics
+- **Repeat Event Handling**: For repeat events, shows countdown to next occurrence rather than original date
 - **Focused Mode**: When tile is clicked, banner highlights that specific moment with:
   - Visual ring border (ring-2 ring-primary/30)
-  - Focused moment's countdown, title, and description
+  - Focused moment's countdown to next occurrence (for repeat events)
+  - Repeat indicator icon when applicable
   - Appropriate emoji based on moment status
 - **Design**: Gradient background with emoji icons and responsive layout
 - **State Management**: Maintains focused moment state, updates on edit, clears on delete
@@ -112,6 +119,7 @@ export interface Moment extends MomentDocument {
   - Title: Input component with validation (required, max 100 chars)
   - Description: Input component for optional short description (max 200 chars)
   - Date: Native HTML5 date input with Label, integrated with react-hook-form
+  - Repeat Frequency: shadcn/ui Select component with options (none, daily, weekly, monthly, yearly)
 - **Validation**: Enhanced Zod schema validation with real-time error feedback for all fields
 - **Actions**: Simplified to Save/Cancel only (delete moved to tile actions)
 - **Loading States**: shadcn/ui Spinner component for form submission feedback
@@ -149,11 +157,16 @@ export const momentSchema = {
     title: { type: 'string', maxLength: 100 },
     description: { type: 'string', maxLength: 200 },
     date: { type: 'string', format: 'date' },
+    repeatFrequency: { 
+      type: 'string', 
+      enum: ['none', 'daily', 'weekly', 'monthly', 'yearly'],
+      default: 'none'
+    },
     createdAt: { type: 'number' },
     updatedAt: { type: 'number' }
   },
-  required: ['id', 'title', 'date', 'createdAt', 'updatedAt'],
-  indexes: ['date', 'createdAt']
+  required: ['id', 'title', 'date', 'repeatFrequency', 'createdAt', 'updatedAt'],
+  indexes: ['date', 'createdAt', 'repeatFrequency']
 };
 
 // Database Configuration
@@ -191,7 +204,10 @@ export const momentFormSchema = z.object({
     .refine((date) => {
       const parsedDate = new Date(date);
       return !isNaN(parsedDate.getTime());
-    }, 'Please enter a valid date')
+    }, 'Please enter a valid date'),
+  repeatFrequency: z
+    .enum(['none', 'daily', 'weekly', 'monthly', 'yearly'])
+    .default('none')
 });
 
 export type MomentFormData = z.infer<typeof momentFormSchema>;
@@ -205,34 +221,103 @@ const form = useForm<MomentFormData>({
   defaultValues: {
     title: '',
     description: '',
-    date: ''
+    date: '',
+    repeatFrequency: 'none'
   }
 });
 ```
 
 ### Date Calculations
 ```typescript
-// Day difference calculation utility
-export function calculateDayDifference(momentDate: string): {
-  daysDifference: number;
-  displayText: string;
-} {
-  const moment = new Date(momentDate);
+// Calculate next occurrence for repeating events
+export function calculateNextOccurrence(
+  originalDate: string, 
+  repeatFrequency: string
+): string {
+  const original = new Date(originalDate);
   const today = new Date();
-  
-  // Reset time to compare dates only
-  moment.setHours(0, 0, 0, 0);
   today.setHours(0, 0, 0, 0);
   
-  const diffTime = moment.getTime() - today.getTime();
+  let nextOccurrence = new Date(original);
+  
+  switch (repeatFrequency) {
+    case 'daily':
+      while (nextOccurrence <= today) {
+        nextOccurrence.setDate(nextOccurrence.getDate() + 1);
+      }
+      break;
+    case 'weekly':
+      while (nextOccurrence <= today) {
+        nextOccurrence.setDate(nextOccurrence.getDate() + 7);
+      }
+      break;
+    case 'monthly':
+      while (nextOccurrence <= today) {
+        nextOccurrence.setMonth(nextOccurrence.getMonth() + 1);
+      }
+      break;
+    case 'yearly':
+      while (nextOccurrence <= today) {
+        nextOccurrence.setFullYear(nextOccurrence.getFullYear() + 1);
+      }
+      break;
+    default:
+      return originalDate;
+  }
+  
+  return nextOccurrence.toISOString().split('T')[0];
+}
+
+// Enhanced day difference calculation for repeat events
+export function calculateDayDifference(
+  momentDate: string, 
+  repeatFrequency: string = 'none'
+): {
+  daysDifference: number;
+  displayText: string;
+  nextOccurrence?: string;
+  status: 'past' | 'today' | 'future';
+} {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  let targetDate: Date;
+  let nextOccurrence: string | undefined;
+  
+  // For repeating events, calculate next occurrence
+  if (repeatFrequency !== 'none') {
+    nextOccurrence = calculateNextOccurrence(momentDate, repeatFrequency);
+    targetDate = new Date(nextOccurrence);
+  } else {
+    targetDate = new Date(momentDate);
+  }
+  
+  targetDate.setHours(0, 0, 0, 0);
+  
+  const diffTime = targetDate.getTime() - today.getTime();
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   
   let displayText: string;
-  if (diffDays === 0) displayText = 'Today';
-  else if (diffDays > 0) displayText = `${diffDays} days until`;
-  else displayText = `${Math.abs(diffDays)} days ago`;
+  let status: 'past' | 'today' | 'future';
   
-  return { daysDifference: diffDays, displayText };
+  if (diffDays === 0) {
+    displayText = 'Today';
+    status = 'today';
+  } else if (diffDays > 0) {
+    displayText = `${diffDays} days until`;
+    status = 'future';
+  } else {
+    // For non-repeating events only
+    displayText = `${Math.abs(diffDays)} days ago`;
+    status = 'past';
+  }
+  
+  // Repeating events are always considered upcoming
+  if (repeatFrequency !== 'none') {
+    status = status === 'today' ? 'today' : 'future';
+  }
+  
+  return { daysDifference: diffDays, displayText, nextOccurrence, status };
 }
 ```
 
@@ -322,12 +407,12 @@ export function AddMomentModal({ open, onOpenChange, onSubmit }) {
 }
 ```
 
-### Enhanced Tile Design with Hover Actions
+### Enhanced Tile Design with Hover Actions and Repeat Indicators
 ```typescript
-// MomentTile component with advanced interactions
+// MomentTile component with advanced interactions and repeat support
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Edit, Trash2 } from "lucide-react";
+import { Edit, Trash2, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -337,7 +422,7 @@ const tileVariants = {
   future: "bg-primary/5 text-primary border-primary/20 hover:bg-primary/10"
 };
 
-// Component structure - Enhanced with hover actions
+// Component structure - Enhanced with repeat indicators
 <Card className={cn(
   "transition-all duration-200 cursor-pointer select-none relative group",
   "hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01]",
@@ -367,9 +452,13 @@ const tileVariants = {
   </div>
 
   <CardHeader className="pb-1 px-3 pt-3">
-    <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 pr-16">
+    <CardTitle className="text-sm font-semibold leading-tight line-clamp-2 pr-16 flex items-center gap-1">
       {title}
       {status === 'today' && <span className="ml-1">🎉</span>}
+      {isRepeating && (
+        <Repeat className="h-3 w-3 text-muted-foreground flex-shrink-0" 
+               aria-label="Repeating event" />
+      )}
     </CardTitle>
   </CardHeader>
   <CardContent className="flex-1 px-3 py-1">
@@ -378,9 +467,21 @@ const tileVariants = {
     )}
   </CardContent>
   <CardFooter className="pt-1 pb-3 px-3">
-    <p className="text-xs font-medium w-full text-center">{formattedDate}</p>
+    <p className="text-xs font-medium w-full text-center">
+      {isRepeating ? `Next: ${formattedNextDate}` : formattedDate}
+    </p>
   </CardFooter>
 </Card>
+
+// Enhanced moment processing for repeat events
+const processedMoment = useMemo(() => {
+  const calculation = calculateDayDifference(moment.date, moment.repeatFrequency);
+  return {
+    ...moment,
+    ...calculation,
+    isRepeating: moment.repeatFrequency !== 'none'
+  };
+}, [moment]);
 
 // Delete with undo toast implementation
 const handleDelete = (e: React.MouseEvent) => {
@@ -396,9 +497,44 @@ const handleDelete = (e: React.MouseEvent) => {
   });
 };
 
+// Grid sorting logic - Repeat events always in upcoming section
+const sortedMoments = useMemo(() => {
+  const processed = moments.map(moment => {
+    const calculation = calculateDayDifference(moment.date, moment.repeatFrequency);
+    return { ...moment, ...calculation, isRepeating: moment.repeatFrequency !== 'none' };
+  });
+  
+  // Separate upcoming (including all repeat events) and past events
+  const upcoming = processed.filter(m => m.status === 'future' || m.status === 'today' || m.isRepeating);
+  const past = processed.filter(m => m.status === 'past' && !m.isRepeating);
+  
+  // Sort upcoming by days until (ascending), past by days ago (descending)
+  upcoming.sort((a, b) => a.daysDifference - b.daysDifference);
+  past.sort((a, b) => b.daysDifference - a.daysDifference);
+  
+  return { upcoming, past };
+}, [moments]);
+
 // Responsive grid classes - More columns for compact tiles
 const gridClasses = "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 p-4";
 ```
+
+## Repeat Event Logic
+
+### Next Occurrence Calculation
+The system calculates the next occurrence of repeat events based on the original date and frequency:
+
+- **Daily**: Advances by 1 day until future date is found
+- **Weekly**: Advances by 7 days until future date is found  
+- **Monthly**: Advances by 1 month until future date is found
+- **Yearly**: Advances by 1 year until future date is found
+
+### Display Behavior
+- **Tile Display**: Shows "Next: [date]" instead of original date for repeat events
+- **Banner Display**: Shows countdown to next occurrence for repeat events
+- **Grid Sorting**: All repeat events appear in upcoming section regardless of original date
+- **Visual Indicator**: Repeat icon displayed on tiles with repeat frequency set
+- **Status Override**: Repeat events are never marked as "past" - always "future" or "today"
 
 ### Interaction Patterns and User Experience
 
