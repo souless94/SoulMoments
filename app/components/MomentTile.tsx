@@ -19,7 +19,7 @@ import { Edit, Trash2, Repeat } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { formatDisplayDate } from "@/lib/date-utils";
-import type { Moment, MomentTileProps } from "@/types/moment";
+import type { MomentTileProps } from "@/types/moment";
 
 /**
  * Tile variant styles for different moment states
@@ -233,59 +233,4 @@ export function MomentTile({
   );
 }
 
-/**
- * Static MomentTile component for demo purposes with sample data
- */
-export function MomentTileDemo() {
-  const sampleMoments: Moment[] = [
-    {
-      id: "1",
-      title: "Wedding Anniversary",
-      date: "2024-06-15",
-      repeatFrequency: "yearly",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      daysDifference: 0,
-      displayText: "Today",
-      status: "today",
-      nextOccurrence: "2024-06-15",
-      isRepeating: true,
-    },
-    {
-      id: "2",
-      title: "Trip to Japan",
-      date: "2024-12-25",
-      repeatFrequency: "none",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      daysDifference: 30,
-      displayText: "30 days until",
-      status: "future",
-      isRepeating: false,
-    },
-    {
-      id: "3",
-      title: "Started New Job",
-      date: "2024-01-15",
-      repeatFrequency: "none",
-      createdAt: Date.now(),
-      updatedAt: Date.now(),
-      daysDifference: -90,
-      displayText: "90 days ago",
-      status: "past",
-      isRepeating: false,
-    },
-  ];
 
-  return (
-    <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 p-4">
-      {sampleMoments.map((moment) => (
-        <MomentTile
-          key={moment.id}
-          moment={moment}
-          onClick={(m) => console.log("Clicked moment:", m.title)}
-        />
-      ))}
-    </div>
-  );
-}

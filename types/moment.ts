@@ -60,7 +60,7 @@ export interface MomentGridProps {
   onMomentDelete?: (moment: Moment) => void;
 }
 
-export interface AddMomentModalProps {
+export interface MomentModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (data: MomentFormData) => void;

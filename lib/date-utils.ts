@@ -82,7 +82,7 @@ export function calculateNextOccurrence(
         const currentDay = nextOccurrence.getUTCDate();
         
         // Handle leap year edge case (Feb 29)
-        let nextYear = currentYear + 1;
+        const nextYear = currentYear + 1;
         let adjustedDay = currentDay;
         
         if (currentMonth === 1 && currentDay === 29 && !isLeapYear(nextYear)) {

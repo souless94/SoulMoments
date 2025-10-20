@@ -5,86 +5,10 @@ import React from 'react';
 import { Header } from './components/Header';
 import { MomentGrid } from './components/MomentGrid';
 import { MomentBanner } from './components/MomentBanner';
-import { AddMomentModal } from './components/AddMomentModal';
+import { MomentModal } from './components/MomentModal';
 import { FloatingAddButton } from './components/FloatingAddButton';
 import { calculateDayDifference } from '@/lib/date-utils';
 import type { Moment, MomentFormData } from '@/types/moment';
-
-// Sample data to demonstrate all UI states
-const SAMPLE_MOMENTS: Omit<Moment, 'daysDifference' | 'displayText' | 'status' | 'nextOccurrence' | 'isRepeating'>[] = [
-  {
-    id: '1',
-    title: 'Wedding Anniversary',
-    description: 'Celebrating 5 years of marriage with a romantic dinner',
-    date: new Date().toISOString().split('T')[0], // Today
-    repeatFrequency: 'yearly', // Anniversary repeats yearly
-    createdAt: Date.now() - 365 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '2',
-    title: 'Trip to Japan',
-    description: 'Two weeks exploring Tokyo, Kyoto, and Mount Fuji',
-    date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '3',
-    title: 'Started New Job',
-    description: 'First day as Senior Developer at TechCorp',
-    date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days ago
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '4',
-    title: 'Birthday Party',
-    description: 'Surprise party with friends and family',
-    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
-    repeatFrequency: 'yearly', // Birthday repeats yearly
-    createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '5',
-    title: 'Graduation Day',
-    description: 'Received my Master\'s degree in Computer Science',
-    date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year ago
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 400 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '6',
-    title: 'Summer Vacation',
-    description: 'Beach house rental with college friends',
-    date: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 120 days from now
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '7',
-    title: 'First Date',
-    description: 'Coffee at the local bookstore cafe',
-    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  },
-  {
-    id: '8',
-    title: 'Marathon Race',
-    description: 'First attempt at running a full 26.2 miles',
-    date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 60 days from now
-    repeatFrequency: 'none',
-    createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
-    updatedAt: Date.now()
-  }
-];
 
 /**
  * Helper function to convert raw moment data to full Moment objects with calculated fields
@@ -102,10 +26,8 @@ function enrichMomentWithCalculations(moment: Omit<Moment, 'daysDifference' | 'd
 }
 
 export default function Home() {
-  // Local state for moments
-  const [moments, setMoments] = React.useState<Moment[]>(() => 
-    SAMPLE_MOMENTS.map(enrichMomentWithCalculations)
-  );
+  // Initialize with empty moments array - will be replaced by database integration
+  const [moments, setMoments] = React.useState<Moment[]>([]);
   
   // Modal state - using React Hook Form approach
   const [isModalOpen, setIsModalOpen] = React.useState(false);
@@ -171,7 +93,9 @@ export default function Home() {
   };
 
   // Handle delete button click
+  // TODO: Replace with database operations in task 6.2
   const handleMomentDelete = (moment: Moment) => {
+    // Temporary implementation - will be replaced by database operations
     setMoments(currentMoments => 
       currentMoments.filter(m => m.id !== moment.id)
     );
@@ -183,13 +107,12 @@ export default function Home() {
   };
 
   // Handle form submission (create/update only)
+  // TODO: Replace with database operations in task 6.2
   const handleFormSubmit = async (data: MomentFormData) => {
     setIsLoading(true);
 
     try {
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 800));
-
+      // Temporary implementation - will be replaced by database operations
       if (editingMoment) {
         // Edit existing moment
         const updatedMoment = enrichMomentWithCalculations({
@@ -211,8 +134,6 @@ export default function Home() {
         if (focusedMoment?.id === editingMoment.id) {
           setFocusedMoment(updatedMoment);
         }
-        
-        console.log('Updated moment:', updatedMoment.title);
       } else {
         // Add new moment
         const newMoment = enrichMomentWithCalculations({
@@ -226,7 +147,6 @@ export default function Home() {
         });
         
         setMoments(currentMoments => [...currentMoments, newMoment]);
-        console.log('Added new moment:', newMoment.title);
       }
 
       // Close modal and reset state
@@ -234,7 +154,7 @@ export default function Home() {
       setEditingMoment(null);
     } catch (error) {
       console.error('Error processing moment:', error);
-      // In a real app, you'd show an error message to the user
+      // TODO: Add proper error handling with user feedback
     } finally {
       setIsLoading(false);
     }
@@ -253,17 +173,17 @@ export default function Home() {
       <Header />
       
       <main className="container mx-auto py-8 pb-24"> {/* Add bottom padding for floating button */}
-        <div className="mb-6 px-4">
-          <h2 className="text-2xl font-semibold mb-2">Your Moments</h2>
-          <p className="text-muted-foreground">
-            Track your important life events and see how time flows. Click on any moment to edit or delete it.
-          </p>
-          {moments.length > 0 && (
+        {moments.length > 0 && (
+          <div className="mb-6 px-4">
+            <h2 className="text-2xl font-semibold mb-2">Your Moments</h2>
+            <p className="text-muted-foreground">
+              Track your important life events and see how time flows. Click on any moment to edit or delete it.
+            </p>
             <p className="text-sm text-muted-foreground mt-2">
               {moments.length} moment{moments.length !== 1 ? 's' : ''} tracked
             </p>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Banner showing moment highlights */}
         <div className="px-4">
@@ -281,7 +201,7 @@ export default function Home() {
         <FloatingAddButton onClick={handleAddMoment} />
 
         {/* Add/Edit Modal */}
-        <AddMomentModal
+        <MomentModal
           open={isModalOpen}
           onOpenChange={handleModalClose}
           onSubmit={handleFormSubmit}

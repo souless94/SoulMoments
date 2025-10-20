@@ -189,7 +189,6 @@
 
 - [x] 4. Implement repeat event logic and calculations
 
-
   - [x] 4.1 Update date utilities for repeat event calculations
 
     - Create calculateNextOccurrence function for repeat frequencies (daily, weekly, monthly, yearly)
@@ -225,9 +224,10 @@
     - Test banner behavior when focusing on repeat events
     - _Requirements: 5.1, 5.2, 5.3, 7.4_
 
-- [ ] 5. Set up RxDB database and data layer
+- [x] 5. Set up RxDB database and data layer
 
-  - [ ] 5.1 Configure RxDB with Dexie.js storage and repeat frequency support
+
+  - [x] 5.1 Configure RxDB with Dexie.js storage and repeat frequency support
 
     - Install and configure RxDB with Dexie.js adapter
     - Update database schema to include repeatFrequency field with enum validation
@@ -236,21 +236,36 @@
     - Create database migration if needed for existing data
     - _Requirements: 1.1, 1.2, 1.3, 7.1_
 
-  - [ ] 5.2 Create database service layer
+  - [x] 5.2 Create database service layer
 
     - Build database service with CRUD operations
     - Implement reactive queries for real-time updates
     - Add error handling for database operations
     - Create custom React hooks for database interactions
+
     - _Requirements: 1.1, 1.2, 4.4, 6.5_
 
-  - [ ] 5.3 Write unit tests for database operations
+  - [x] 5.3 Write unit tests for database operations
 
     - Create tests for CRUD operations including repeat frequency field
     - Test reactive query behavior
     - Mock RxDB for isolated testing
     - Test error handling scenarios
     - _Requirements: 1.1, 4.4, 6.5_
+
+- [x] 5.4 Clean up hardcoded demo data and prepare for database integration
+
+
+
+
+
+
+  - Remove hardcoded sample moments from components and utilities
+  - Clean up any demo data or placeholder content in UI components
+  - Remove temporary local state management code that will be replaced by database
+  - Update components to handle empty states gracefully
+  - Ensure all components are ready for database integration
+  - _Requirements: 1.1, 1.4, 5.1_
 
 - [ ] 6. Connect UI to database (replace local state with persistent storage)
 

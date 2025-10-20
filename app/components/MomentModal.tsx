@@ -1,7 +1,7 @@
 /**
  * MomentModal component with React Hook Form and Zod validation
  * Uses upsert approach - same interface for create and edit
- * Modal only handles create/update operations
+ * Modal handles both create and update operations
  */
 
 "use client";
@@ -32,22 +32,18 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { momentFormSchema, type MomentFormData } from "@/lib/validations";
 import { getTodayDateString } from "@/lib/date-utils";
-import type {
-  Moment,
-  AddMomentModalProps,
-  RepeatFrequency,
-} from "@/types/moment";
+import type { MomentModalProps, RepeatFrequency } from "@/types/moment";
 
 /**
  * MomentModal component for upsert operations (create/edit)
  */
-export function AddMomentModal({
+export function MomentModal({
   open,
   onOpenChange,
   onSubmit,
   editingMoment = null,
   isLoading = false,
-}: AddMomentModalProps) {
+}: MomentModalProps) {
   const hasExistingMoment = editingMoment !== null;
 
   // Initialize form with React Hook Form and Zod validation
@@ -230,119 +226,5 @@ export function AddMomentModal({
         </form>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/**
- * Demo component showing the upsert modal approach
- */
-export function MomentModalDemo() {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [editingMoment, setEditingMoment] = React.useState<Moment | null>(null);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [moments, setMoments] = React.useState<Moment[]>([]);
-
-  // Sample moment for edit demo
-  const sampleMoment: Moment = {
-    id: "1",
-    title: "Wedding Anniversary",
-    description: "Celebrating 5 years together",
-    date: "2024-06-15",
-    repeatFrequency: "yearly",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    daysDifference: 0,
-    displayText: "Today",
-    status: "today",
-  };
-
-  const handleSubmit = async (data: MomentFormData) => {
-    setIsLoading(true);
-
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    console.log("Upsert submitted:", data);
-
-    // Handle upsert logic
-    const dataWithDelete = data as MomentFormData & { _delete?: boolean };
-    if (!dataWithDelete._delete) {
-      const momentData = {
-        id: editingMoment?.id || Date.now().toString(),
-        title: data.title,
-        description: data.description,
-        date: data.date,
-        repeatFrequency: data.repeatFrequency,
-        createdAt: editingMoment?.createdAt || Date.now(),
-        updatedAt: Date.now(),
-        daysDifference: 0,
-        displayText: "Today",
-        status: "today" as const,
-      };
-
-      if (editingMoment) {
-        // Update existing
-        setMoments((prev) =>
-          prev.map((m) => (m.id === editingMoment.id ? momentData : m))
-        );
-      } else {
-        // Create new
-        setMoments((prev) => [...prev, momentData]);
-      }
-    }
-
-    setIsLoading(false);
-    setIsOpen(false);
-    setEditingMoment(null);
-  };
-
-  const openCreateModal = () => {
-    setEditingMoment(null);
-    setIsOpen(true);
-  };
-
-  const openEditModal = () => {
-    setEditingMoment(sampleMoment);
-    setIsOpen(true);
-  };
-
-  return (
-    <div className="p-8 space-y-6">
-      <div className="space-y-4">
-        <h2 className="text-2xl font-semibold">Moment Modal Demo (Upsert)</h2>
-        <p className="text-muted-foreground">
-          Same interface for create and edit - upsert approach with shadcn
-          Loader.
-        </p>
-      </div>
-
-      <div className="flex gap-4">
-        <Button onClick={openCreateModal}>Create Moment</Button>
-        <Button variant="outline" onClick={openEditModal}>
-          Edit Sample Moment
-        </Button>
-      </div>
-
-      {moments.length > 0 && (
-        <div className="space-y-2">
-          <h3 className="text-lg font-medium">Moments:</h3>
-          <ul className="space-y-1">
-            {moments.map((moment) => (
-              <li key={moment.id} className="text-sm text-muted-foreground">
-                {moment.title} - {moment.date}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      <AddMomentModal
-        open={isOpen}
-        onOpenChange={setIsOpen}
-        onSubmit={handleSubmit}
-        editingMoment={editingMoment}
-        isLoading={isLoading}
-      />
-    </div>
   );
 }
