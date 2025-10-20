@@ -25,6 +25,7 @@ src/
 │   └── components/
 │       ├── MomentTile.tsx    # Individual moment tile component using Card
 │       ├── MomentGrid.tsx    # Responsive grid container
+│       ├── MomentBanner.tsx  # Banner showing moment highlights and statistics
 │       ├── AddMomentModal.tsx # Add/edit moment modal using Dialog
 │       └── Header.tsx        # Navigation header
 ├── components/
@@ -57,6 +58,7 @@ src/
 export interface MomentDocument {
   id: string;           // UUID primary key
   title: string;        // User-provided title (max 100 characters)
+  description?: string; // Optional short description (max 200 characters)
   date: string;         // ISO date string (YYYY-MM-DD)
   createdAt: number;    // Unix timestamp
   updatedAt: number;    // Unix timestamp
@@ -66,32 +68,44 @@ export interface MomentDocument {
 export interface Moment extends MomentDocument {
   daysDifference: number;  // Calculated field
   displayText: string;     // "X days ago" / "X days until" / "Today"
+  status: 'past' | 'today' | 'future';  // Status for styling and logic
 }
 ```
 
 ### Core Components
 
 #### 1. Tile Component (shadcn/ui Card)
-- **Purpose**: Visual representation of a single moment using Card component
-- **Layout**: Card with CardHeader (title), CardContent (day count), and CardFooter (date)
-- **States**: Past events (muted variant), future events (default variant), today (accent variant)
+- **Purpose**: Compact visual representation of a single moment using Card component
+- **Layout**: Card with CardHeader (title + today emoji), CardContent (description), and CardFooter (date)
+- **Size**: Smaller, more compact tiles optimized for mobile viewing
+- **States**: Past events (muted variant), future events (primary variant), today (accent variant with emoji)
 - **Interactions**: Tap to edit/delete, accessible keyboard navigation
 
 #### 2. Tile Grid
-- **Layout**: CSS Grid with responsive columns (1 on mobile, 2-3 on tablet, 3-4 on desktop)
+- **Layout**: CSS Grid with responsive columns (2 on mobile, 3 on tablet, 4-6 on desktop)
+- **Spacing**: Tighter gap (12px) for more compact layout
 - **Sorting**: Chronological order with upcoming events first, then past events
 - **Performance**: Virtual scrolling for large collections (100+ moments)
 
-#### 3. Add/Edit Modal (shadcn/ui Dialog with React Hook Form)
+#### 3. Moment Banner
+- **Purpose**: Prominent display of key moment information at the top of the page
+- **Content**: Today's moments, next upcoming moment, recent past moment, and summary statistics
+- **Design**: Gradient background with emoji icons and responsive layout
+- **Visibility**: Only shown when moments exist, hidden for empty state
+
+#### 4. Add/Edit Modal (shadcn/ui Dialog with React Hook Form)
 - **Components**: Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
-- **Form Management**: React Hook Form with useForm hook for state management
-- **Fields**: Input component for title, native HTML5 date input with Label, integrated with react-hook-form
-- **Validation**: Zod schema validation with real-time error feedback
-- **Actions**: Button components for Save/Cancel with proper variants and form submission handling
+- **Form Management**: React Hook Form with useForm hook for comprehensive state management
+- **Fields**: 
+  - Title: Input component with validation (required, max 100 chars)
+  - Description: Input component for optional short description (max 200 chars)
+  - Date: Native HTML5 date input with Label, integrated with react-hook-form
+- **Validation**: Enhanced Zod schema validation with real-time error feedback for all fields
+- **Actions**: Button components for Save/Cancel/Delete with proper variants and form submission handling
 - **Mobile UX**: Responsive dialog that adapts to screen size
 - **Error Handling**: Field-level and form-level error display using shadcn/ui error styling
 
-#### 4. Navigation Header
+#### 5. Navigation Header
 - **Elements**: App title, Button component for Add action
 - **Mobile**: Sticky header with touch-friendly Button sizes (44px minimum)
 - **Accessibility**: Proper ARIA labels and keyboard navigation
@@ -108,6 +122,7 @@ export const momentSchema = {
   properties: {
     id: { type: 'string', maxLength: 36 },
     title: { type: 'string', maxLength: 100 },
+    description: { type: 'string', maxLength: 200 },
     date: { type: 'string', format: 'date' },
     createdAt: { type: 'number' },
     updatedAt: { type: 'number' }
@@ -139,6 +154,12 @@ export const momentFormSchema = z.object({
     .min(1, 'Title is required')
     .max(100, 'Title must be 100 characters or less')
     .trim(),
+  description: z
+    .string()
+    .max(200, 'Description must be 200 characters or less')
+    .trim()
+    .optional()
+    .or(z.literal('')),
   date: z
     .string()
     .min(1, 'Date is required')
@@ -158,6 +179,7 @@ const form = useForm<MomentFormData>({
   resolver: zodResolver(momentFormSchema),
   defaultValues: {
     title: '',
+    description: '',
     date: ''
   }
 });
@@ -287,27 +309,34 @@ const tileVariants = {
   future: "bg-primary text-primary-foreground"
 };
 
-// Component structure
-<Card className={cn("transition-all duration-200 hover:shadow-lg hover:-translate-y-1 cursor-pointer", tileVariants[status])}>
-  <CardHeader>
-    <CardTitle>{title}</CardTitle>
+// Component structure - Compact design
+<Card className={cn("transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:scale-[1.01] cursor-pointer min-h-[100px]", tileVariants[status])}>
+  <CardHeader className="pb-1 px-3 pt-3">
+    <CardTitle className="text-sm font-semibold leading-tight line-clamp-2">
+      {title}
+      {status === 'today' && <span className="ml-1">🎉</span>}
+    </CardTitle>
   </CardHeader>
-  <CardContent>
-    <p className="text-2xl font-bold">{displayText}</p>
+  <CardContent className="flex-1 px-3 py-1">
+    {description && (
+      <p className="text-xs leading-relaxed line-clamp-2">{description}</p>
+    )}
   </CardContent>
-  <CardFooter>
-    <p className="text-sm opacity-75">{date}</p>
+  <CardFooter className="pt-1 pb-3 px-3">
+    <p className="text-xs font-medium w-full text-center">{formattedDate}</p>
   </CardFooter>
 </Card>
 
-// Responsive grid classes
-const gridClasses = "grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 p-4";
+// Responsive grid classes - More columns for compact tiles
+const gridClasses = "grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 p-4";
 ```
 
 ### Responsive Breakpoints
-- **Mobile**: < 768px (1 column)
-- **Tablet**: 768px - 1024px (2-3 columns)
-- **Desktop**: > 1024px (3-4 columns)
+- **Mobile**: < 640px (2 columns for better space utilization)
+- **Small Tablet**: 640px - 768px (3 columns)
+- **Tablet**: 768px - 1024px (4 columns)
+- **Desktop**: 1024px - 1280px (5 columns)
+- **Large Desktop**: > 1280px (6 columns with auto-fit minimum 200px)
 
 ## Error Handling
 

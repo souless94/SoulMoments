@@ -1,103 +1,256 @@
-import Image from "next/image";
+'use client';
+
+import React from 'react';
+
+import { Header } from './components/Header';
+import { MomentGrid } from './components/MomentGrid';
+import { MomentBanner } from './components/MomentBanner';
+import { AddMomentModal } from './components/AddMomentModal';
+import { calculateDayDifference } from '@/lib/date-utils';
+import type { Moment, MomentFormData } from '@/types/moment';
+
+// Sample data to demonstrate all UI states
+const SAMPLE_MOMENTS: Omit<Moment, 'daysDifference' | 'displayText' | 'status'>[] = [
+  {
+    id: '1',
+    title: 'Wedding Anniversary',
+    description: 'Celebrating 5 years of marriage with a romantic dinner',
+    date: new Date().toISOString().split('T')[0], // Today
+    createdAt: Date.now() - 365 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '2',
+    title: 'Trip to Japan',
+    description: 'Two weeks exploring Tokyo, Kyoto, and Mount Fuji',
+    date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days from now
+    createdAt: Date.now() - 30 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '3',
+    title: 'Started New Job',
+    description: 'First day as Senior Developer at TechCorp',
+    date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days ago
+    createdAt: Date.now() - 120 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '4',
+    title: 'Birthday Party',
+    description: 'Surprise party with friends and family',
+    date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 7 days from now
+    createdAt: Date.now() - 60 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '5',
+    title: 'Graduation Day',
+    description: 'Received my Master\'s degree in Computer Science',
+    date: new Date(Date.now() - 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 1 year ago
+    createdAt: Date.now() - 400 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '6',
+    title: 'Summer Vacation',
+    description: 'Beach house rental with college friends',
+    date: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 120 days from now
+    createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '7',
+    title: 'First Date',
+    description: 'Coffee at the local bookstore cafe',
+    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 30 days ago
+    createdAt: Date.now() - 45 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  },
+  {
+    id: '8',
+    title: 'Marathon Race',
+    description: 'First attempt at running a full 26.2 miles',
+    date: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 60 days from now
+    createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
+    updatedAt: Date.now()
+  }
+];
+
+/**
+ * Helper function to convert raw moment data to full Moment objects with calculated fields
+ */
+function enrichMomentWithCalculations(moment: Omit<Moment, 'daysDifference' | 'displayText' | 'status'>): Moment {
+  const { daysDifference, displayText, status } = calculateDayDifference(moment.date);
+  return {
+    ...moment,
+    daysDifference,
+    displayText,
+    status
+  };
+}
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // Local state for moments
+  const [moments, setMoments] = React.useState<Moment[]>(() => 
+    SAMPLE_MOMENTS.map(enrichMomentWithCalculations)
+  );
+  
+  // Modal state - using React Hook Form approach
+  const [isModalOpen, setIsModalOpen] = React.useState(false);
+  const [editingMoment, setEditingMoment] = React.useState<Moment | null>(null);
+  const [isLoading, setIsLoading] = React.useState(false);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  // Update day calculations when component mounts or date changes
+  React.useEffect(() => {
+    const updateDayCalculations = () => {
+      setMoments(currentMoments => 
+        currentMoments.map(moment => {
+          const { daysDifference, displayText, status } = calculateDayDifference(moment.date);
+          return {
+            ...moment,
+            daysDifference,
+            displayText,
+            status
+          };
+        })
+      );
+    };
+
+    // Update immediately
+    updateDayCalculations();
+
+    // Update daily at midnight
+    const now = new Date();
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+    const msUntilMidnight = tomorrow.getTime() - now.getTime();
+
+    const timeoutId = setTimeout(() => {
+      updateDayCalculations();
+      // Set up daily interval after first midnight update
+      const intervalId = setInterval(updateDayCalculations, 24 * 60 * 60 * 1000);
+      return () => clearInterval(intervalId);
+    }, msUntilMidnight);
+
+    return () => clearTimeout(timeoutId);
+  }, []);
+
+  // Handle opening add modal
+  const handleAddMoment = () => {
+    setEditingMoment(null);
+    setIsModalOpen(true);
+  };
+
+  // Handle moment tile click (for editing)
+  const handleMomentClick = (moment: Moment) => {
+    setEditingMoment(moment);
+    setIsModalOpen(true);
+  };
+
+  // Handle form submission (add, edit, delete)
+  const handleFormSubmit = async (data: MomentFormData & { _delete?: boolean }) => {
+    setIsLoading(true);
+
+    try {
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 800));
+
+      if (data._delete && editingMoment) {
+        // Delete moment
+        setMoments(currentMoments => 
+          currentMoments.filter(moment => moment.id !== editingMoment.id)
+        );
+        console.log('Deleted moment:', editingMoment.title);
+      } else if (editingMoment) {
+        // Edit existing moment
+        const updatedMoment = enrichMomentWithCalculations({
+          ...editingMoment,
+          title: data.title,
+          description: data.description,
+          date: data.date,
+          updatedAt: Date.now()
+        });
+        
+        setMoments(currentMoments =>
+          currentMoments.map(moment =>
+            moment.id === editingMoment.id ? updatedMoment : moment
+          )
+        );
+        console.log('Updated moment:', updatedMoment.title);
+      } else {
+        // Add new moment
+        const newMoment = enrichMomentWithCalculations({
+          id: Date.now().toString(),
+          title: data.title,
+          description: data.description,
+          date: data.date,
+          createdAt: Date.now(),
+          updatedAt: Date.now()
+        });
+        
+        setMoments(currentMoments => [...currentMoments, newMoment]);
+        console.log('Added new moment:', newMoment.title);
+      }
+
+      // Close modal and reset state
+      setIsModalOpen(false);
+      setEditingMoment(null);
+    } catch (error) {
+      console.error('Error processing moment:', error);
+      // In a real app, you'd show an error message to the user
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle modal close
+  const handleModalClose = (open: boolean) => {
+    if (!open) {
+      setEditingMoment(null);
+    }
+    setIsModalOpen(open);
+  };
+
+  return (
+    <div className="min-h-screen bg-background">
+      <Header onAddMoment={handleAddMoment} />
+      
+      <main className="container mx-auto py-8">
+        <div className="mb-6 px-4">
+          <h2 className="text-2xl font-semibold mb-2">Your Moments</h2>
+          <p className="text-muted-foreground">
+            Track your important life events and see how time flows. Click on any moment to edit or delete it.
+          </p>
+          {moments.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-2">
+              {moments.length} moment{moments.length !== 1 ? 's' : ''} tracked
+            </p>
+          )}
         </div>
+
+        {/* Banner showing moment highlights */}
+        <div className="px-4">
+          <MomentBanner moments={moments} />
+        </div>
+        
+        <MomentGrid
+          moments={moments}
+          onMomentClick={handleMomentClick}
+          onMomentEdit={handleMomentClick}
+          onMomentDelete={handleMomentClick}
+        />
+
+        {/* Add/Edit Modal */}
+        <AddMomentModal
+          open={isModalOpen}
+          onOpenChange={handleModalClose}
+          onSubmit={handleFormSubmit}
+          editingMoment={editingMoment}
+          isLoading={isLoading}
+        />
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
