@@ -26,7 +26,6 @@ export async function initDB(): Promise<RxDatabase<MyCollections>> {
         multiInstance: false,
       });
 
-      // ✅ Add collections immediately, do not conditionally check
       await db.addCollections({
         moments: { schema: momentSchema },
       });
@@ -40,6 +39,9 @@ export async function initDB(): Promise<RxDatabase<MyCollections>> {
 export function generateId() {
   return (
     crypto.randomUUID?.() ||
-    `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+    `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   );
 }
+
+
+

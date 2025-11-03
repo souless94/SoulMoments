@@ -302,6 +302,9 @@
 
 
 
+
+
+
   - [-] 8.1 Implement security headers and CSP
 
 
@@ -328,18 +331,50 @@
     - Ensure proper viewport handling
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5_
 
-  - [ ] 8.4 Add accessibility improvements (leveraging shadcn/ui accessibility)
+  - [x] 8.5 Implement focused testing strategy
 
-    - Verify shadcn/ui components have proper ARIA labels and roles
-    - Ensure keyboard navigation works throughout app using Radix UI primitives
-    - Test with screen readers to validate shadcn/ui accessibility features
-    - Verify color contrast meets WCAG standards with shadcn/ui theme
-    - _Requirements: 3.3, 3.5_
 
-  - [ ] 8.5 Create end-to-end tests
 
-    - Write E2E tests for core user flows
-    - Test PWA installation and offline functionality
-    - Verify cross-browser compatibility
-    - Test mobile device functionality
-    - _Requirements: All requirements validation_
+
+
+
+    - [x] 8.5.1 Set up E2E testing with Playwright
+
+
+      - Install and configure Playwright for PWA testing
+      - Set up test environment with proper viewport configurations
+      - Create test utilities and helper functions
+      - Configure CI/CD pipeline for E2E tests
+
+    - [x] 8.5.2 Write essential E2E tests
+
+
+      - Complete moment lifecycle test (create → view → edit → delete → undo)
+      - Moment management workflow (multiple moments, sorting, focus functionality)
+      - Repeat events workflow (all frequencies, next occurrence display)
+      - Offline functionality test (create/edit while offline, data persistence)
+      - Mobile UX tests (floating button, touch interactions, responsive layout)
+
+
+    - [x] 8.5.3 Implement core unit tests
+
+      - Date utilities tests (calculateDayDifference, calculateNextOccurrence, display text)
+      - Form validation tests (Zod schema validation, all field types and limits)
+      - Database operations tests (CRUD, validation, error handling)
+
+
+    - [x] 8.5.4 Add integration tests
+
+      - Reactive data flow (UI updates when data changes)
+      - Form + database integration (submission, validation, edit mode)
+      - Component interactions (modal ↔ grid, banner ↔ grid)
+
+    - [x] 8.5.5 PWA-specific tests
+
+
+      - Installation flow on mobile and desktop
+      - Service worker functionality and caching
+      - Offline-first behavior verification
+      - Performance and loading tests
+
+    - _Requirements: All requirements validation, user experience quality assurance_
