@@ -3,148 +3,154 @@
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
+// Helper functions to reduce nesting complexity
+const handleUpdateClick = (newWorker: ServiceWorker) => {
+  if (newWorker && newWorker.state === 'installed') {
+    newWorker.postMessage({ 
+      type: 'SKIP_WAITING',
+      timestamp: Date.now(),
+      origin: window.location.origin
+    });
+    window.location.reload();
+  }
+};
+
+const handleStateChange = (newWorker: ServiceWorker, setUpdateAvailable: (value: boolean) => void) => {
+  if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+    setUpdateAvailable(true);
+    
+    toast.info('App update available', {
+      description: 'A new version is ready. Refresh to update.',
+      action: {
+        label: 'Update Now',
+        onClick: () => handleUpdateClick(newWorker),
+      },
+      duration: 15000,
+    });
+  } else if (newWorker.state === 'activated') {
+    setUpdateAvailable(false);
+    toast.success('App updated successfully');
+  }
+};
+
+const handleUpdateFound = (reg: ServiceWorkerRegistration, setUpdateAvailable: (value: boolean) => void) => {
+  const newWorker = reg.installing;
+  if (newWorker) {
+    newWorker.addEventListener('statechange', () => handleStateChange(newWorker, setUpdateAvailable));
+  }
+};
+
+const validateMessage = (event: MessageEvent): boolean => {
+  if (event.origin !== window.location.origin) {
+    console.warn('Ignoring message from untrusted origin:', event.origin);
+    return false;
+  }
+
+  if (!event.source || event.source !== navigator.serviceWorker.controller) {
+    console.warn('Ignoring message from unknown source');
+    return false;
+  }
+
+  const { data } = event;
+  if (!data || typeof data !== 'object' || typeof data.type !== 'string') {
+    console.warn('Ignoring invalid message format:', data);
+    return false;
+  }
+
+  const allowedMessageTypes = ['CACHE_UPDATED', 'CACHE_STATUS', 'OFFLINE_READY'];
+  if (!allowedMessageTypes.includes(data.type)) {
+    console.warn('Ignoring unknown message type:', data.type);
+    return false;
+  }
+
+  return true;
+};
+
+const handleValidatedMessage = (data: { type: string; payload?: object; caches?: string[] }) => {
+  switch (data.type) {
+    case 'CACHE_UPDATED':
+      if (data.payload && typeof data.payload === 'object') {
+        console.log('Cache updated:', data.payload);
+      }
+      break;
+      
+    case 'CACHE_STATUS':
+      if (Array.isArray(data.caches)) {
+        console.log('Cache status:', data.caches);
+      }
+      break;
+      
+    case 'OFFLINE_READY':
+      toast.success('App ready for offline use', {
+        description: 'All essential resources have been cached.',
+        duration: 5000,
+      });
+      break;
+      
+    default:
+      console.warn('Unhandled message type:', data.type);
+  }
+};
+
 export default function ServiceWorkerRegistration() {
   const [registration, setRegistration] = useState<ServiceWorkerRegistration | null>(null);
   const [, setUpdateAvailable] = useState(false);
 
   useEffect(() => {
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker
-        .register('/sw.js')
-        .then((reg) => {
-          console.log('Service Worker registered successfully:', reg);
-          setRegistration(reg);
-          
-          // Check for updates immediately
-          reg.update();
-          
-          // Handle service worker updates
-          reg.addEventListener('updatefound', () => {
-            const newWorker = reg.installing;
-            if (newWorker) {
-              newWorker.addEventListener('statechange', () => {
-                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                  setUpdateAvailable(true);
-                  
-                  // Show update notification
-                  toast.info('App update available', {
-                    description: 'A new version is ready. Refresh to update.',
-                    action: {
-                      label: 'Update Now',
-                      onClick: () => {
-                        // Tell the new service worker to skip waiting with proper validation
-                        if (newWorker && newWorker.state === 'installed') {
-                          newWorker.postMessage({ 
-                            type: 'SKIP_WAITING',
-                            timestamp: Date.now(),
-                            origin: window.location.origin
-                          });
-                          window.location.reload();
-                        }
-                      },
-                    },
-                    duration: 15000,
-                  });
-                } else if (newWorker.state === 'activated') {
-                  setUpdateAvailable(false);
-                  toast.success('App updated successfully');
-                }
-              });
-            }
-          });
+    if (!('serviceWorker' in navigator)) {
+      return;
+    }
 
-          // Handle service worker state changes
-          if (reg.waiting) {
-            setUpdateAvailable(true);
-          }
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((reg) => {
+        console.log('Service Worker registered successfully:', reg);
+        setRegistration(reg);
+        
+        // Check for updates immediately
+        reg.update();
+        
+        // Handle service worker updates
+        reg.addEventListener('updatefound', () => handleUpdateFound(reg, setUpdateAvailable));
 
-          // Listen for controlling service worker changes
-          navigator.serviceWorker.addEventListener('controllerchange', () => {
-            console.log('Service worker controller changed');
-            setUpdateAvailable(false);
-          });
-        })
-        .catch((error) => {
-          console.error('Service Worker registration failed:', error);
-          toast.error('Offline features unavailable', {
-            description: 'Service worker registration failed. Some features may not work offline.',
-            duration: 8000,
-          });
+        // Handle service worker state changes
+        if (reg.waiting) {
+          setUpdateAvailable(true);
+        }
+
+        // Listen for controlling service worker changes
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          console.log('Service worker controller changed');
+          setUpdateAvailable(false);
         });
-
-      // Listen for service worker messages with proper validation
-      navigator.serviceWorker.addEventListener('message', (event) => {
-        // Validate message origin and source
-        if (event.origin !== window.location.origin) {
-          console.warn('Ignoring message from untrusted origin:', event.origin);
-          return;
-        }
-
-        // Ensure message comes from our service worker
-        if (!event.source || event.source !== navigator.serviceWorker.controller) {
-          console.warn('Ignoring message from unknown source');
-          return;
-        }
-
-        const { data } = event;
-        
-        // Validate message structure
-        if (!data || typeof data !== 'object' || typeof data.type !== 'string') {
-          console.warn('Ignoring invalid message format:', data);
-          return;
-        }
-
-        // Define allowed message types for security
-        const allowedMessageTypes = ['CACHE_UPDATED', 'CACHE_STATUS', 'OFFLINE_READY'];
-        
-        if (!allowedMessageTypes.includes(data.type)) {
-          console.warn('Ignoring unknown message type:', data.type);
-          return;
-        }
-        
-        // Handle validated messages
-        switch (data.type) {
-          case 'CACHE_UPDATED':
-            if (data.payload && typeof data.payload === 'object') {
-              console.log('Cache updated:', data.payload);
-            }
-            break;
-            
-          case 'CACHE_STATUS':
-            if (Array.isArray(data.caches)) {
-              console.log('Cache status:', data.caches);
-            }
-            break;
-            
-          case 'OFFLINE_READY':
-            toast.success('App ready for offline use', {
-              description: 'All essential resources have been cached.',
-              duration: 5000,
-            });
-            break;
-            
-          default:
-            // This should never happen due to allowedMessageTypes check above
-            console.warn('Unhandled message type:', data.type);
-        }
+      })
+      .catch((error) => {
+        console.error('Service Worker registration failed:', error);
+        toast.error('Offline features unavailable', {
+          description: 'Service worker registration failed. Some features may not work offline.',
+          duration: 8000,
+        });
       });
 
-      // Check for updates periodically (every 30 minutes)
-      const updateInterval = setInterval(() => {
-        if (registration) {
-          registration.update().catch(error => {
-            console.warn('Failed to check for updates:', error);
-          });
-        }
-      }, 30 * 60 * 1000);
+    // Listen for service worker messages with proper validation
+    navigator.serviceWorker.addEventListener('message', (event) => {
+      if (!validateMessage(event)) {
+        return;
+      }
+      handleValidatedMessage(event.data);
+    });
 
-      return () => {
-        clearInterval(updateInterval);
-      };
-    }
-    
+    // Check for updates periodically (every 30 minutes)
+    const updateInterval = setInterval(() => {
+      if (registration) {
+        registration.update().catch(error => {
+          console.warn('Failed to check for updates:', error);
+        });
+      }
+    }, 30 * 60 * 1000);
+
     return () => {
-      // Cleanup function for when service worker is not supported
+      clearInterval(updateInterval);
     };
   }, [registration]);
 

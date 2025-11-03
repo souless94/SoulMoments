@@ -13,6 +13,70 @@ export interface DateCalculationResult {
   isRepeating: boolean;
 }
 
+// Helper functions to reduce cognitive complexity
+const calculateDailyNext = (original: Date, todayUTC: Date): Date => {
+  const nextOccurrence = new Date(original);
+  while (nextOccurrence <= todayUTC) {
+    nextOccurrence.setUTCDate(nextOccurrence.getUTCDate() + 1);
+  }
+  return nextOccurrence;
+};
+
+const calculateWeeklyNext = (original: Date, todayUTC: Date): Date => {
+  const nextOccurrence = new Date(original);
+  while (nextOccurrence <= todayUTC) {
+    nextOccurrence.setUTCDate(nextOccurrence.getUTCDate() + 7);
+  }
+  return nextOccurrence;
+};
+
+const calculateMonthlyNext = (original: Date, todayUTC: Date): Date => {
+  let nextOccurrence = new Date(original);
+  
+  while (nextOccurrence <= todayUTC) {
+    const currentMonth = nextOccurrence.getUTCMonth();
+    const currentYear = nextOccurrence.getUTCFullYear();
+    const currentDay = nextOccurrence.getUTCDate();
+    
+    // Handle month boundary
+    let nextMonth = currentMonth + 1;
+    let nextYear = currentYear;
+    
+    if (nextMonth > 11) {
+      nextMonth = 0;
+      nextYear++;
+    }
+    
+    // Handle cases where the day doesn't exist in the next month
+    const daysInNextMonth = getDaysInMonth(nextYear, nextMonth + 1);
+    const adjustedDay = Math.min(currentDay, daysInNextMonth);
+    
+    nextOccurrence = new Date(Date.UTC(nextYear, nextMonth, adjustedDay));
+  }
+  
+  return nextOccurrence;
+};
+
+const calculateYearlyNext = (original: Date, todayUTC: Date): Date => {
+  let nextOccurrence = new Date(original);
+  
+  while (nextOccurrence <= todayUTC) {
+    const currentYear = nextOccurrence.getUTCFullYear();
+    const currentMonth = nextOccurrence.getUTCMonth();
+    const currentDay = nextOccurrence.getUTCDate();
+    
+    // Handle leap year edge case (Feb 29)
+    const nextYear = currentYear + 1;
+    const adjustedDay = (currentMonth === 1 && currentDay === 29 && !isLeapYear(nextYear)) 
+      ? 28 
+      : currentDay;
+    
+    nextOccurrence = new Date(Date.UTC(nextYear, currentMonth, adjustedDay));
+  }
+  
+  return nextOccurrence;
+};
+
 /**
  * Calculate the next occurrence of a repeating event
  * 
@@ -36,62 +100,23 @@ export function calculateNextOccurrence(
     today.getDate()
   ));
 
-  let nextOccurrence = new Date(original);
+  let nextOccurrence: Date;
 
   switch (repeatFrequency) {
     case 'daily':
-      // Always find the next occurrence after today
-      while (nextOccurrence <= todayUTC) {
-        nextOccurrence.setUTCDate(nextOccurrence.getUTCDate() + 1);
-      }
+      nextOccurrence = calculateDailyNext(original, todayUTC);
       break;
     case 'weekly':
-      // Always find the next occurrence after today
-      while (nextOccurrence <= todayUTC) {
-        nextOccurrence.setUTCDate(nextOccurrence.getUTCDate() + 7);
-      }
+      nextOccurrence = calculateWeeklyNext(original, todayUTC);
       break;
     case 'monthly':
-      // Always find the next occurrence after today
-      while (nextOccurrence <= todayUTC) {
-        const currentMonth = nextOccurrence.getUTCMonth();
-        const currentYear = nextOccurrence.getUTCFullYear();
-        const currentDay = nextOccurrence.getUTCDate();
-        
-        // Handle month boundary and leap year edge cases
-        let nextMonth = currentMonth + 1;
-        let nextYear = currentYear;
-        
-        if (nextMonth > 11) {
-          nextMonth = 0;
-          nextYear++;
-        }
-        
-        // Handle cases where the day doesn't exist in the next month (e.g., Jan 31 -> Feb 31)
-        const daysInNextMonth = getDaysInMonth(nextYear, nextMonth + 1);
-        const adjustedDay = Math.min(currentDay, daysInNextMonth);
-        
-        nextOccurrence = new Date(Date.UTC(nextYear, nextMonth, adjustedDay));
-      }
+      nextOccurrence = calculateMonthlyNext(original, todayUTC);
       break;
     case 'yearly':
-      // Always find the next occurrence after today
-      while (nextOccurrence <= todayUTC) {
-        const currentYear = nextOccurrence.getUTCFullYear();
-        const currentMonth = nextOccurrence.getUTCMonth();
-        const currentDay = nextOccurrence.getUTCDate();
-        
-        // Handle leap year edge case (Feb 29)
-        const nextYear = currentYear + 1;
-        let adjustedDay = currentDay;
-        
-        if (currentMonth === 1 && currentDay === 29 && !isLeapYear(nextYear)) {
-          adjustedDay = 28; // Feb 29 -> Feb 28 in non-leap years
-        }
-        
-        nextOccurrence = new Date(Date.UTC(nextYear, currentMonth, adjustedDay));
-      }
+      nextOccurrence = calculateYearlyNext(original, todayUTC);
       break;
+    default:
+      nextOccurrence = original;
   }
 
   return nextOccurrence.toISOString().split('T')[0];

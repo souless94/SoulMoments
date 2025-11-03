@@ -16,6 +16,66 @@ import {
 import { useOfflineStatus, useStorageManagement } from '@/hooks/useOfflineStatus';
 import { cn } from '@/lib/utils';
 
+// Helper functions to reduce cognitive complexity
+const formatBytes = (bytes: number) => {
+  if (bytes === 0) return '0 Bytes';
+  const k = 1024;
+  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+};
+
+const getAlertStyles = (isOnline: boolean, isNearLimit: boolean) => {
+  if (!isOnline) {
+    return {
+      className: 'border-orange-500 bg-orange-50 dark:bg-orange-950/20',
+      icon: WifiOff,
+      iconColor: 'text-orange-600 dark:text-orange-400',
+      titleColor: 'text-orange-800 dark:text-orange-200',
+      descColor: 'text-orange-700 dark:text-orange-300'
+    };
+  }
+  
+  if (isNearLimit) {
+    return {
+      className: 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20',
+      icon: AlertTriangle,
+      iconColor: 'text-yellow-600 dark:text-yellow-400',
+      titleColor: 'text-yellow-800 dark:text-yellow-200',
+      descColor: 'text-yellow-700 dark:text-yellow-300'
+    };
+  }
+  
+  return {
+    className: 'border-green-500 bg-green-50 dark:bg-green-950/20',
+    icon: CheckCircle2,
+    iconColor: 'text-green-600 dark:text-green-400',
+    titleColor: 'text-green-800 dark:text-green-200',
+    descColor: 'text-green-700 dark:text-green-300'
+  };
+};
+
+const getAlertContent = (isOnline: boolean, isNearLimit: boolean, usagePercentage?: number) => {
+  if (!isOnline) {
+    return {
+      title: 'Offline Mode',
+      description: 'Your data is saved locally and will sync when you\'re back online.'
+    };
+  }
+  
+  if (isNearLimit && usagePercentage) {
+    return {
+      title: 'Storage Warning',
+      description: `Storage is ${usagePercentage.toFixed(1)}% full. Consider clearing cache.`
+    };
+  }
+  
+  return {
+    title: 'All Systems Ready',
+    description: 'Offline-ready with local data storage.'
+  };
+};
+
 export default function OfflineIndicator() {
   const { 
     isOnline, 
@@ -55,14 +115,6 @@ export default function OfflineIndicator() {
     return null;
   }
 
-  const formatBytes = (bytes: number) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const getConnectionBadge = () => {
     if (!isOnline) return <Badge variant="destructive">Offline</Badge>;
     if (connectionType) {
@@ -86,48 +138,26 @@ export default function OfflineIndicator() {
     );
   };
 
+  // Determine alert state and styles
+  const isNearLimit = storageInfo?.isNearLimit || false;
+  const alertStyles = getAlertStyles(isOnline, isNearLimit);
+  const alertContent = getAlertContent(isOnline, isNearLimit, storageInfo?.usagePercentage);
+  const IconComponent = alertStyles.icon;
+
   return (
     <div className="fixed top-4 left-4 right-4 z-50 max-w-md mx-auto">
-      <Alert className={cn(
-        "transition-all duration-300",
-        !isOnline ? 'border-orange-500 bg-orange-50 dark:bg-orange-950/20' : 
-        storageInfo?.isNearLimit ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20' :
-        'border-green-500 bg-green-50 dark:bg-green-950/20'
-      )}>
+      <Alert className={cn("transition-all duration-300", alertStyles.className)}>
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2 flex-1">
-            {!isOnline ? (
-              <WifiOff className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-            ) : storageInfo?.isNearLimit ? (
-              <AlertTriangle className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
-            ) : (
-              <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
-            )}
+            <IconComponent className={cn("h-4 w-4", alertStyles.iconColor)} />
             
             <div className="flex-1">
-              <AlertTitle className={cn(
-                "text-sm font-medium",
-                !isOnline ? 'text-orange-800 dark:text-orange-200' :
-                storageInfo?.isNearLimit ? 'text-yellow-800 dark:text-yellow-200' :
-                'text-green-800 dark:text-green-200'
-              )}>
-                {!isOnline ? 'Offline Mode' : 
-                 storageInfo?.isNearLimit ? 'Storage Warning' : 
-                 'All Systems Ready'}
+              <AlertTitle className={cn("text-sm font-medium", alertStyles.titleColor)}>
+                {alertContent.title}
               </AlertTitle>
               
-              <AlertDescription className={cn(
-                "text-xs mt-1",
-                !isOnline ? 'text-orange-700 dark:text-orange-300' :
-                storageInfo?.isNearLimit ? 'text-yellow-700 dark:text-yellow-300' :
-                'text-green-700 dark:text-green-300'
-              )}>
-                {!isOnline ? 
-                  'Your data is saved locally and will sync when you\'re back online.' :
-                  storageInfo?.isNearLimit ?
-                  `Storage is ${storageInfo.usagePercentage.toFixed(1)}% full. Consider clearing cache.` :
-                  'Offline-ready with local data storage.'
-                }
+              <AlertDescription className={cn("text-xs mt-1", alertStyles.descColor)}>
+                {alertContent.description}
               </AlertDescription>
             </div>
           </div>
