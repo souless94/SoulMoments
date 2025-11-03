@@ -15,11 +15,17 @@ export const generateMomentId = generateId;
 export async function initTestDB(dbName?: string) {
   const { createRxDatabase } = await import('rxdb/plugins/core');
   const { getRxStorageDexie } = await import('rxdb/plugins/storage-dexie');
+  const { wrappedKeyCompressionStorage } = await import('rxdb/plugins/key-compression');
   const { momentSchema } = await import('../../schemas/moments.schema');
+  
+  // Use the same storage configuration as the main app
+  const storage = wrappedKeyCompressionStorage({
+    storage: getRxStorageDexie()
+  });
   
   const db = await createRxDatabase({
     name: dbName || `test-db-${Date.now()}`,
-    storage: getRxStorageDexie(),
+    storage: storage,
     multiInstance: false,
     ignoreDuplicate: true, // Allow duplicate database names for tests
   });
