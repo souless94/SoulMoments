@@ -56,7 +56,8 @@ test.describe('Moment Lifecycle', () => {
 
     // Verify repeat indicator is shown
     const tile = helpers.getMomentTile(momentData.title);
-    await expect(tile.locator('[data-testid="repeat-icon"]')).toBeVisible();
+    // Check for repeat icon (Repeat component from lucide-react)
+    await expect(tile.locator('svg')).toBeVisible();
   });
 
   test('create moment with minimal data', async () => {

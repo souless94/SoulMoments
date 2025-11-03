@@ -19,7 +19,7 @@ export default function Home() {
     moments,
     loading: dbLoading,
     error: dbError,
-    setMoments,
+    // setMoments, // Currently unused
   } = useMomentsDB();
 
   // Modal & focused states

@@ -71,7 +71,7 @@ export interface MomentModalProps {
 /**
  * Database operation result types
  */
-export interface DatabaseResult<T = any> {
+export interface DatabaseResult<T = unknown> {
   success: boolean;
   data?: T;
   error?: string;

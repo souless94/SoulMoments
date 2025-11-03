@@ -40,7 +40,7 @@ export function useOfflineStatus() {
 
     // Get connection type (if available)
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as Navigator & { connection?: { effectiveType?: string; type?: string } }).connection;
       connectionType = connection?.effectiveType || connection?.type || null;
     }
 
@@ -103,7 +103,7 @@ export function useOfflineStatus() {
   // Monitor connection changes
   useEffect(() => {
     if ('connection' in navigator) {
-      const connection = (navigator as any).connection;
+      const connection = (navigator as Navigator & { connection?: { addEventListener?: (event: string, handler: () => void) => void; removeEventListener?: (event: string, handler: () => void) => void; effectiveType?: string; type?: string } }).connection;
       
       const handleConnectionChange = () => {
         setStatus(prev => ({
@@ -112,10 +112,10 @@ export function useOfflineStatus() {
         }));
       };
 
-      connection?.addEventListener('change', handleConnectionChange);
+      connection?.addEventListener?.('change', handleConnectionChange);
       
       return () => {
-        connection?.removeEventListener('change', handleConnectionChange);
+        connection?.removeEventListener?.('change', handleConnectionChange);
       };
     }
   }, []);

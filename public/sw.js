@@ -15,13 +15,6 @@ const STATIC_ASSETS = [
   '/img/icon-512-512.png'
 ];
 
-// Critical resources that must be cached for offline-first operation
-const CRITICAL_RESOURCES = [
-  '/_next/static/css/',
-  '/_next/static/chunks/',
-  '/_next/static/media/'
-];
-
 // Assets to cache on first request for offline-first functionality
 const RUNTIME_CACHE_PATTERNS = [
   /\/_next\/static\/.*/,
@@ -29,20 +22,6 @@ const RUNTIME_CACHE_PATTERNS = [
   /\/fonts\/.*/,
   /\/api\/.*/ // Cache API calls if any exist
 ];
-
-// Offline-first: Cache everything needed for the app to work without internet
-const OFFLINE_FIRST_PATTERNS = [
-  /\/_next\/static\/chunks\/.*\.js$/,
-  /\/_next\/static\/css\/.*\.css$/,
-  /\/.*\.woff2?$/
-];
-
-// Cache strategies
-const CACHE_STRATEGIES = {
-  CACHE_FIRST: 'cache-first',
-  NETWORK_FIRST: 'network-first',
-  STALE_WHILE_REVALIDATE: 'stale-while-revalidate'
-};
 
 // Cache size limits
 const CACHE_LIMITS = {

@@ -285,7 +285,7 @@ describe('momentDocumentSchema', () => {
         updatedAt: 1234567890
       };
       
-      delete (incompleteDocument as any)[field];
+      delete (incompleteDocument as Record<string, unknown>)[field];
       
       const result = momentDocumentSchema.safeParse(incompleteDocument);
       expect(result.success).toBe(false);

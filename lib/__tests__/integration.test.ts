@@ -4,12 +4,12 @@
  */
 
 import { describe, test, expect, beforeEach, afterEach, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+// import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { resetDatabase, initTestDB } from './test-utils';
 
 // Use test database for integration tests
 const initDB = initTestDB;
-import { useMoments } from '../../hooks/useMoment';
+// import { useMoments } from '../../hooks/useMoment';
 import { calculateDayDifference } from '../date-utils';
 import { momentFormSchema } from '../validations';
 import type { MomentDocument } from '../../schemas/moments.schema';
@@ -18,7 +18,7 @@ import type { MomentDocument } from '../../schemas/moments.schema';
 vi.mock('react-hook-form', () => ({
   useForm: () => ({
     register: vi.fn(),
-    handleSubmit: vi.fn((fn) => (e: any) => {
+    handleSubmit: vi.fn((fn) => (e: Event) => {
       e.preventDefault();
       fn({ title: 'Test Moment', date: '2024-12-25', repeatFrequency: 'none' });
     }),
@@ -168,7 +168,7 @@ describe('Form and Database Integration', () => {
       title: 'a'.repeat(101), // Too long
       description: 'b'.repeat(201), // Too long
       date: 'invalid-date',
-      repeatFrequency: 'invalid' as any,
+      repeatFrequency: 'invalid' as 'none',
     };
 
     const validationResult = momentFormSchema.safeParse(invalidFormData);

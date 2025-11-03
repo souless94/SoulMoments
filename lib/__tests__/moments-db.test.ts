@@ -221,7 +221,7 @@ describe('Data Validation', () => {
     const invalidData = {
       title: 'Test',
       date: '2024-01-01',
-      repeatFrequency: 'invalid' as any
+      repeatFrequency: 'invalid' as 'none'
     };
 
     expect(() => validateMomentData(invalidData)).toThrow(DatabaseError);
@@ -235,7 +235,7 @@ describe('Data Validation', () => {
       const validData = {
         title: 'Test',
         date: '2024-01-01',
-        repeatFrequency: frequency as any
+        repeatFrequency: frequency as 'none'
       };
       expect(() => validateMomentData(validData)).not.toThrow();
     });

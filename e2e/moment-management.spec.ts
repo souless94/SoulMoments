@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { MomentTestHelpers, DateTestHelpers } from './utils/test-helpers';
+import { MomentTestHelpers } from './utils/test-helpers';
 import { testMoments } from './fixtures/test-data';
 
 test.describe('Moment Management Workflow', () => {
@@ -22,7 +22,6 @@ test.describe('Moment Management Workflow', () => {
     // Verify sorting: today and future first, then past
     const tiles = helpers.momentTiles;
     const firstTile = tiles.first();
-    const lastTile = tiles.last();
     
     // Today or future moment should be first
     await expect(firstTile).not.toContainText(testMoments.past.title);
@@ -104,8 +103,8 @@ test.describe('Moment Management Workflow', () => {
     await tile.hover();
     
     // Verify both edit and delete buttons are visible
-    await expect(tile.locator('[data-testid="edit-button"]')).toBeVisible();
-    await expect(tile.locator('[data-testid="delete-button"]')).toBeVisible();
+    await expect(tile.locator('button').nth(0)).toBeVisible(); // Delete button
+    await expect(tile.locator('button').nth(1)).toBeVisible(); // Edit button
     
     // Click tile (should focus, not trigger edit)
     await tile.click();
@@ -116,7 +115,7 @@ test.describe('Moment Management Workflow', () => {
     
     // Now click edit button specifically
     await tile.hover();
-    await tile.locator('[data-testid="edit-button"]').click();
+    await tile.locator('button').nth(1).click(); // Edit button
     await expect(helpers.modal).toBeVisible();
   });
 });
@@ -147,7 +146,7 @@ test.describe('Grid Layout and Responsive Behavior', () => {
     await helpers.page.waitForTimeout(500); // Allow layout to adjust
     
     // Should show 2 columns on mobile
-    const gridContainer = helpers.page.locator('[data-testid="moment-grid"]');
+    const gridContainer = helpers.page.locator('.grid').first();
     await expect(gridContainer).toHaveClass(/grid-cols-2/);
 
     // Test tablet layout

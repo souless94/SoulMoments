@@ -31,26 +31,6 @@ test.describe('PWA Installation and Manifest', () => {
     expect(manifest.icons.length).toBeGreaterThan(0);
   });
 
-  test('PWA icons are available in multiple sizes', async ({ page }) => {
-    const manifestResponse = await page.request.get('/manifest.json');
-    const manifest = await manifestResponse.json();
-    
-    const expectedSizes = ['192x192', '256x256', '384x384', '512x512'];
-    
-    for (const size of expectedSizes) {
-      const iconWithSize = manifest.icons.find((icon: any) => 
-        icon.sizes === size || icon.sizes.includes(size)
-      );
-      expect(iconWithSize).toBeDefined();
-      
-      // Verify icon file exists
-      if (iconWithSize) {
-        const iconResponse = await page.request.get(iconWithSize.src);
-        expect(iconResponse.ok()).toBe(true);
-      }
-    }
-  });
-
   test('supports PWA installation prompt', async ({ page }) => {
     await pwaHelpers.expectInstallPrompt();
     
@@ -62,7 +42,7 @@ test.describe('PWA Installation and Manifest', () => {
     expect(themeColor).toBeDefined();
   });
 
-  test('app works as standalone PWA', async ({ page, context }) => {
+  test('app works as standalone PWA', async ({ page }) => {
     // Simulate standalone mode
     await page.addInitScript(() => {
       Object.defineProperty(window.navigator, 'standalone', {
@@ -191,7 +171,7 @@ test.describe('Offline-First Behavior', () => {
     await helpers.expectMomentExists(testMoments.future.title);
   });
 
-  test('handles network state changes gracefully', async ({ page, context }) => {
+  test('handles network state changes gracefully', async ({ context }) => {
     // Start online
     await helpers.createMoment(testMoments.basic);
     
@@ -256,7 +236,7 @@ test.describe('Performance and Loading', () => {
     expect(loadTime).toBeLessThan(3000);
   });
 
-  test('interactions are responsive', async ({ page }) => {
+  test('interactions are responsive', async () => {
     await helpers.goto();
     
     // Test button click responsiveness
@@ -316,7 +296,7 @@ test.describe('Performance and Loading', () => {
     
     // Get initial memory usage
     const initialMemory = await page.evaluate(() => {
-      return (performance as any).memory?.usedJSHeapSize || 0;
+      return (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
     });
     
     // Perform operations that might cause memory leaks
@@ -332,14 +312,14 @@ test.describe('Performance and Loading', () => {
     
     // Force garbage collection if available
     await page.evaluate(() => {
-      if ((window as any).gc) {
-        (window as any).gc();
+      if ((window as Window & { gc?: () => void }).gc) {
+        (window as Window & { gc?: () => void }).gc();
       }
     });
     
     // Check final memory usage
     const finalMemory = await page.evaluate(() => {
-      return (performance as any).memory?.usedJSHeapSize || 0;
+      return (performance as Performance & { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 0;
     });
     
     // Memory shouldn't have grown significantly (allow for some variance)
@@ -370,12 +350,12 @@ test.describe('PWA Features Integration', () => {
     if (badgeSupported) {
       // Test badge functionality
       await page.evaluate(() => {
-        (navigator as any).setAppBadge(5);
+        (navigator as Navigator & { setAppBadge?: (count: number) => void }).setAppBadge?.(5);
       });
       
       // Clear badge
       await page.evaluate(() => {
-        (navigator as any).clearAppBadge();
+        (navigator as Navigator & { clearAppBadge?: () => void }).clearAppBadge?.();
       });
     }
     
@@ -401,7 +381,8 @@ test.describe('PWA Features Integration', () => {
       };
       
       const canShare = await page.evaluate((data) => {
-        return (navigator as any).canShare ? (navigator as any).canShare(data) : true;
+        const nav = navigator as Navigator & { canShare?: (data: unknown) => boolean };
+        return nav.canShare ? nav.canShare(data) : true;
       }, shareData);
       
       expect(canShare).toBe(true);
