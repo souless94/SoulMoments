@@ -16,15 +16,44 @@ import type { MomentGridProps } from '@/types/moment';
 /**
  * MomentGrid component that displays moments in a responsive grid layout
  */
-export function MomentGrid({ 
+export const MomentGrid = React.memo(function MomentGrid({ 
   moments, 
   onMomentClick, 
   onMomentEdit, 
   onMomentDelete,
   className 
 }: MomentGridProps & { className?: string }) {
-  // Sort moments by date (upcoming first, then past events)
-  const sortedMoments = sortMomentsByDate(moments);
+  // Sort moments by date (upcoming first, then past events) - memoized for performance
+  const sortedMoments = React.useMemo(() => sortMomentsByDate(moments), [moments]);
+
+  // Separate moments by status for better organization - memoized for performance
+  // Repeating events are always considered "upcoming" since they repeat
+  const { futureMoments, todayMoments, pastMoments } = React.useMemo(() => ({
+    futureMoments: sortedMoments.filter(m => 
+      m.status === 'future' || m.isRepeating
+    ),
+    todayMoments: sortedMoments.filter(m => 
+      m.status === 'today' && !m.isRepeating
+    ),
+    pastMoments: sortedMoments.filter(m => 
+      m.status === 'past' && !m.isRepeating
+    )
+  }), [sortedMoments]);
+
+  // Memoize grid classes to prevent recalculation
+  const gridClasses = React.useMemo(() => cn(
+    // Base grid layout
+    "grid gap-3 w-full",
+    // Responsive breakpoints
+    // Mobile: 2 columns (as requested)
+    "grid-cols-2",
+    // Tablet: 3 columns
+    "sm:grid-cols-3 md:grid-cols-4",
+    // Desktop: 4-5 columns
+    "lg:grid-cols-5 xl:grid-cols-6",
+    // Auto-fit for very large screens with smaller minimum width
+    "2xl:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]"
+  ), []);
 
   // Handle empty state
   if (moments.length === 0) {
@@ -43,32 +72,6 @@ export function MomentGrid({
       </div>
     );
   }
-
-  // Separate moments by status for better organization
-  // Repeating events are always considered "upcoming" since they repeat
-  const futureMoments = sortedMoments.filter(m => 
-    m.status === 'future' || m.isRepeating
-  );
-  const todayMoments = sortedMoments.filter(m => 
-    m.status === 'today' && !m.isRepeating
-  );
-  const pastMoments = sortedMoments.filter(m => 
-    m.status === 'past' && !m.isRepeating
-  );
-
-  const gridClasses = cn(
-    // Base grid layout
-    "grid gap-3 w-full",
-    // Responsive breakpoints
-    // Mobile: 2 columns (as requested)
-    "grid-cols-2",
-    // Tablet: 3 columns
-    "sm:grid-cols-3 md:grid-cols-4",
-    // Desktop: 4-5 columns
-    "lg:grid-cols-5 xl:grid-cols-6",
-    // Auto-fit for very large screens with smaller minimum width
-    "2xl:grid-cols-[repeat(auto-fit,minmax(200px,1fr))]"
-  );
 
   return (
     <div className={cn("w-full p-4", className)}>
@@ -114,5 +117,5 @@ export function MomentGrid({
       )}
     </div>
   );
-}
+});
 

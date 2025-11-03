@@ -27,7 +27,7 @@ test.describe('Moment Management Workflow', () => {
     await expect(firstTile).not.toContainText(testMoments.past.title);
     
     // Past moment should be after separator
-    const separator = helpers.page.locator('text=Past Moments');
+    const separator = helpers.getPage().locator('text=Past Moments');
     await expect(separator).toBeVisible();
   });
 
@@ -38,14 +38,13 @@ test.describe('Moment Management Workflow', () => {
 
     const banner = helpers.banner;
     
-    // Should show today's moment
+    // Should show today's moment with celebration emoji
     await expect(banner).toContainText(testMoments.today.title);
+    await expect(banner).toContainText('🎉');
     
-    // Should show upcoming count
-    await expect(banner).toContainText('upcoming');
-    
-    // Should show past count
-    await expect(banner).toContainText('past');
+    // Should show future moment with clock emoji
+    await expect(banner).toContainText(testMoments.future.title);
+    await expect(banner).toContainText('⏰');
   });
 
   test('focus functionality changes banner display', async () => {
@@ -68,11 +67,13 @@ test.describe('Moment Management Workflow', () => {
     // Should show empty state when no moments exist
     await helpers.expectMomentCount(0);
     
-    // Banner should be hidden or show empty state
+    // Banner should be hidden when no moments exist
     const banner = helpers.banner;
-    if (await banner.isVisible()) {
-      await expect(banner).toContainText('No moments');
-    }
+    await expect(banner).not.toBeVisible();
+    
+    // Should show empty state message in the grid
+    const emptyState = helpers.getPage().locator('text=No moments yet');
+    await expect(emptyState).toBeVisible();
   });
 
   test('bulk operations and state management', async () => {
@@ -88,7 +89,7 @@ test.describe('Moment Management Workflow', () => {
     // Delete all moments one by one
     for (const moment of moments) {
       await helpers.deleteMoment(moment.title);
-      await helpers.page.waitForTimeout(6000); // Let toast expire
+      await helpers.waitForTimeout(6000); // Let toast expire
     }
     
     await helpers.expectMomentCount(0);
@@ -99,12 +100,12 @@ test.describe('Moment Management Workflow', () => {
     
     const tile = helpers.getMomentTile(testMoments.basic.title);
     
-    // Hover to show action buttons
-    await tile.hover();
+    // Verify both edit and delete buttons are visible (they should be visible without hover on mobile)
+    const deleteButton = tile.locator('button[aria-label="Delete moment"]');
+    const editButton = tile.locator('button[aria-label="Edit moment"]');
     
-    // Verify both edit and delete buttons are visible
-    await expect(tile.locator('button').nth(0)).toBeVisible(); // Delete button
-    await expect(tile.locator('button').nth(1)).toBeVisible(); // Edit button
+    await expect(deleteButton).toBeVisible();
+    await expect(editButton).toBeVisible();
     
     // Click tile (should focus, not trigger edit)
     await tile.click();
@@ -114,8 +115,7 @@ test.describe('Moment Management Workflow', () => {
     await expect(helpers.modal).not.toBeVisible();
     
     // Now click edit button specifically
-    await tile.hover();
-    await tile.locator('button').nth(1).click(); // Edit button
+    await editButton.click();
     await expect(helpers.modal).toBeVisible();
   });
 });
@@ -143,22 +143,22 @@ test.describe('Grid Layout and Responsive Behavior', () => {
 
     // Test mobile layout
     await helpers.setMobileViewport();
-    await helpers.page.waitForTimeout(500); // Allow layout to adjust
+    await helpers.waitForTimeout(500); // Allow layout to adjust
     
     // Should show 2 columns on mobile
-    const gridContainer = helpers.page.locator('.grid').first();
+    const gridContainer = helpers.getPage().locator('.grid').first();
     await expect(gridContainer).toHaveClass(/grid-cols-2/);
 
     // Test tablet layout
     await helpers.setTabletViewport();
-    await helpers.page.waitForTimeout(500);
+    await helpers.waitForTimeout(500);
     
     // Should show 3 columns on tablet
     await expect(gridContainer).toHaveClass(/sm:grid-cols-3/);
 
     // Test desktop layout
     await helpers.setDesktopViewport();
-    await helpers.page.waitForTimeout(500);
+    await helpers.waitForTimeout(500);
     
     // Should show more columns on desktop
     await expect(gridContainer).toHaveClass(/lg:grid-cols-5/);
@@ -182,7 +182,7 @@ test.describe('Grid Layout and Responsive Behavior', () => {
     await helpers.createMoment(testMoments.future);
     await helpers.createMoment(testMoments.today);
     
-    const separator = helpers.page.locator('text=Past Moments');
+    const separator = helpers.getPage().locator('text=Past Moments');
     await expect(separator).not.toBeVisible();
     
     // Add a past moment - separator should appear

@@ -3,23 +3,26 @@
 import React from "react";
 import { toast } from "sonner";
 
+import dynamic from "next/dynamic";
 import { Header } from "./components/Header";
 import { MomentGrid } from "./components/MomentGrid";
 import { MomentBanner } from "./components/MomentBanner";
-import { MomentModal } from "./components/MomentModal";
 import { FloatingAddButton } from "./components/FloatingAddButton";
-
-
-import { initDB, generateId } from "@/lib/moments-db";
 import type { Moment, MomentFormData, MomentDocument } from "@/types/moment";
 import { useMomentsDB } from "@/hooks/useMoment";
+import { generateId, initDB } from "@/lib/moments-db";
+
+// Code split the modal component since it's only used when user clicks add/edit
+const MomentModal = dynamic(() => import("./components/MomentModal").then(mod => ({ default: mod.MomentModal })), {
+  ssr: false,
+  loading: () => null, // No loading spinner needed for modal
+});
 
 export default function Home() {
   const {
     moments,
     loading: dbLoading,
     error: dbError,
-    // setMoments, // Currently unused
   } = useMomentsDB();
 
   // Modal & focused states
@@ -28,18 +31,22 @@ export default function Home() {
   const [focusedMoment, setFocusedMoment] = React.useState<Moment | null>(null);
   const [isLoading, setIsLoading] = React.useState(false);
 
-  // Add / Edit / Delete handlers
-  const handleAddMoment = () => {
+  // Add / Edit / Delete handlers - memoized to prevent unnecessary re-renders
+  const handleAddMoment = React.useCallback(() => {
     setEditingMoment(null);
     setIsModalOpen(true);
-  };
-  const handleMomentClick = (moment: Moment) => setFocusedMoment(moment);
-  const handleMomentEdit = (moment: Moment) => {
+  }, []);
+  
+  const handleMomentClick = React.useCallback((moment: Moment) => {
+    setFocusedMoment(moment);
+  }, []);
+  
+  const handleMomentEdit = React.useCallback((moment: Moment) => {
     setEditingMoment(moment);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleMomentDelete = async (moment: Moment) => {
+  const handleMomentDelete = React.useCallback(async (moment: Moment) => {
     try {
       const db = await initDB();
       const doc = await db.moments.findOne(moment.id).exec();
@@ -52,9 +59,9 @@ export default function Home() {
       console.error(err);
       toast.error("Failed to delete moment");
     }
-  };
+  }, [focusedMoment?.id]);
 
-  const handleFormSubmit = async (data: MomentFormData) => {
+  const handleFormSubmit = React.useCallback(async (data: MomentFormData) => {
     setIsLoading(true);
     try {
       const db = await initDB();
@@ -95,7 +102,7 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [editingMoment]);
 
   if (dbLoading) return <LoadingScreen />;
   if (dbError) return <ErrorScreen error={dbError} />;
@@ -104,8 +111,6 @@ export default function Home() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto py-8 pb-24">
-
-
         {moments.length > 0 && (
           <div className="mb-6 px-4">
             <h2 className="text-2xl font-semibold mb-2">Your Moments</h2>

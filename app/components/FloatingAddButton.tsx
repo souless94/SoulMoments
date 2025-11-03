@@ -18,7 +18,7 @@ export interface FloatingAddButtonProps {
 /**
  * Floating add button component
  */
-export function FloatingAddButton({ onClick, className }: FloatingAddButtonProps) {
+export const FloatingAddButton = React.memo(function FloatingAddButton({ onClick, className }: FloatingAddButtonProps) {
   return (
     <Button
       onClick={onClick}
@@ -46,4 +46,4 @@ export function FloatingAddButton({ onClick, className }: FloatingAddButtonProps
       <Plus className="h-7 w-7 sm:h-6 sm:w-6 md:h-5 md:w-5" />
     </Button>
   );
-}
+});
