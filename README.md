@@ -9,7 +9,34 @@ A beautiful, offline-first life moments tracker that helps you capture and refle
 
 **[Try SoulMoments →](https://soul-moments.vercel.app/)**
 
-*Note: This is a demo deployment of a side project. All data is stored locally in your browser.*
+## ⚠️ Project Status & Disclaimer
+
+**This is a side project with limited maintenance.**
+
+- **No Long-term Support**: This project may not receive regular updates or maintenance
+- **Use at Your Own Risk**: While functional, this is primarily a demonstration/learning project
+- **Security**: Basic security measures are implemented, but this is not enterprise-grade software
+- **Data**: All data is stored locally in your browser - no server-side storage or backups
+- **Contributions Welcome**: Community contributions are appreciated but not guaranteed to be reviewed promptly
+
+## Table of Contents
+================
+
+- [📊 Metrics](#-metrics)
+- [✨ Features](#-features)
+- [🚀 Quick Start](#-quick-start)
+- [🛠️ Tech Stack](#-tech-stack)
+- [📱 Usage](#-usage)
+  - [Adding Moments](#adding-moments)
+  - [Managing Moments](#managing-moments)
+  - [Repeat Events](#repeat-events)`
+
+## 📊 Metrics
+
+- **SonarCloud**: Code quality and security analysis
+- **Snyk**: Vulnerability scanning
+- **SonarCloud**: Code quality and security analysis
+- **Snyk**: Vulnerability scanning
 
 ## ✨ Features
 
