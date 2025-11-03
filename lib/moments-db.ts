@@ -1,15 +1,20 @@
 import { MomentDocument, momentSchema } from "@/schemas/moments.schema";
-import { addRxPlugin, createRxDatabase, RxCollection, RxDatabase } from "rxdb/plugins/core";
+import {
+  addRxPlugin,
+  createRxDatabase,
+  RxCollection,
+  RxDatabase,
+} from "rxdb/plugins/core";
 import { RxDBDevModePlugin } from "rxdb/plugins/dev-mode";
 import { getRxStorageDexie } from "rxdb/plugins/storage-dexie";
-import { wrappedKeyCompressionStorage } from 'rxdb/plugins/key-compression';
-import { RxDBUpdatePlugin } from 'rxdb/plugins/update';
-
+import { wrappedValidateAjvStorage } from "rxdb/plugins/validate-ajv";
+import { wrappedKeyCompressionStorage } from "rxdb/plugins/key-compression";
+import { RxDBUpdatePlugin } from "rxdb/plugins/update";
 
 addRxPlugin(RxDBUpdatePlugin);
 
 // Add RxDB plugins for development and enhanced functionality
-if (process.env.NODE_ENV === 'development') {
+if (process.env.NODE_ENV === "development") {
   addRxPlugin(RxDBDevModePlugin);
 }
 
@@ -19,8 +24,10 @@ export type MyCollections = {
 
 let db: Promise<RxDatabase<MyCollections>> | null = null;
 
-const DBStore = wrappedKeyCompressionStorage({
-    storage: getRxStorageDexie()
+const DBStore = wrappedValidateAjvStorage({
+  storage: wrappedKeyCompressionStorage({
+    storage: getRxStorageDexie(),
+  }),
 });
 
 export async function initDB(): Promise<RxDatabase<MyCollections>> {
@@ -48,6 +55,3 @@ export function generateId() {
     `${Date.now()}_${Math.random().toString(36).substring(2, 9)}`
   );
 }
-
-
-
