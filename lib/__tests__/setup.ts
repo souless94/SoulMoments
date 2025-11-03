@@ -1,14 +1,20 @@
 import { vi } from 'vitest';
+import { RxDBDevModePlugin } from 'rxdb/plugins/dev-mode'
+import { addRxPlugin } from 'rxdb';
 
+addRxPlugin(RxDBDevModePlugin);
 // Mock IndexedDB for testing
 import 'fake-indexeddb/auto';
 
-// Mock crypto.randomUUID for consistent testing
+// attach node crypto subtle for rxdb
+import { webcrypto } from 'crypto'
 Object.defineProperty(global, 'crypto', {
-  value: {
-    randomUUID: () => `test-uuid-${Math.random().toString(36).substring(2, 9)}`,
-  },
-});
+  value: webcrypto
+})
+
+// only override randomUUID function BUT keep subtle intact
+// @ts-ignore
+global.crypto.randomUUID = () => `test-uuid-${Math.random().toString(36).substring(2, 9)}`
 
 // Mock navigator properties
 Object.defineProperty(navigator, 'onLine', {

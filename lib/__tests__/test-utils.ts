@@ -2,27 +2,39 @@
  * Test utilities for database and validation testing
  */
 
-import type { MomentDocument } from '../../schemas/moments.schema';
-import { generateId } from '../moments-db';
+import { addRxPlugin } from "rxdb/plugins/core";
+import type { MomentDocument } from "../../schemas/moments.schema";
+import { generateId } from "../moments-db";
+import { RxDBDevModePlugin } from "rxdb/plugins/dev-mode";
 
+if (process.env.NODE_ENV === "development") {
+  addRxPlugin(RxDBDevModePlugin);
+}
 // Export schema for tests
-export { momentSchema } from '../../schemas/moments.schema';
+export { momentSchema } from "../../schemas/moments.schema";
 
 // Test-only database utilities
 export const generateMomentId = generateId;
 
 // Test database initialization with custom names and settings
 export async function initTestDB(dbName?: string) {
-  const { createRxDatabase } = await import('rxdb/plugins/core');
-  const { getRxStorageDexie } = await import('rxdb/plugins/storage-dexie');
-  const { wrappedKeyCompressionStorage } = await import('rxdb/plugins/key-compression');
-  const { momentSchema } = await import('../../schemas/moments.schema');
-  
+  const { createRxDatabase } = await import("rxdb/plugins/core");
+  const { getRxStorageDexie } = await import("rxdb/plugins/storage-dexie");
+  const { wrappedValidateAjvStorage } = await import(
+    "rxdb/plugins/validate-ajv"
+  );
+  const { wrappedKeyCompressionStorage } = await import(
+    "rxdb/plugins/key-compression"
+  );
+  const { momentSchema } = await import("../../schemas/moments.schema");
+
   // Use the same storage configuration as the main app
-  const storage = wrappedKeyCompressionStorage({
-    storage: getRxStorageDexie()
+  const storage = wrappedValidateAjvStorage({
+    storage: wrappedKeyCompressionStorage({
+      storage: getRxStorageDexie(),
+    }),
   });
-  
+
   const db = await createRxDatabase({
     name: dbName || `test-db-${Date.now()}`,
     storage: storage,
@@ -53,7 +65,7 @@ export function markDatabaseInitialized(): void {
 }
 
 // Alias for consistency with old API
-export { initDB as initializeDatabase } from '../moments-db';
+export { initDB as initializeDatabase } from "../moments-db";
 
 // Custom error class for database operations (used in tests)
 export class DatabaseError extends Error {
@@ -62,7 +74,7 @@ export class DatabaseError extends Error {
 
   constructor(message: string, operation?: string, originalError?: Error) {
     super(message);
-    this.name = 'DatabaseError';
+    this.name = "DatabaseError";
     this.operation = operation;
     this.originalError = originalError;
   }
@@ -70,37 +82,49 @@ export class DatabaseError extends Error {
 
 // Validation function for moment data (test-only utility)
 export function validateMomentData(data: Partial<MomentDocument>): void {
-  if (!data.title || data.title.trim() === '') {
-    throw new DatabaseError('Title is required', 'validation');
+  if (!data.title || data.title.trim() === "") {
+    throw new DatabaseError("Title is required", "validation");
   }
 
   if (data.title.length > 100) {
-    throw new DatabaseError('Title must be 100 characters or less', 'validation');
+    throw new DatabaseError(
+      "Title must be 100 characters or less",
+      "validation"
+    );
   }
 
   if (data.description && data.description.length > 200) {
-    throw new DatabaseError('Description must be 200 characters or less', 'validation');
+    throw new DatabaseError(
+      "Description must be 200 characters or less",
+      "validation"
+    );
   }
 
   if (!data.date) {
-    throw new DatabaseError('Date is required', 'validation');
+    throw new DatabaseError("Date is required", "validation");
   }
 
   // Validate date format (YYYY-MM-DD)
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(data.date)) {
-    throw new DatabaseError('Date must be in YYYY-MM-DD format', 'validation');
+    throw new DatabaseError("Date must be in YYYY-MM-DD format", "validation");
   }
 
   // Validate actual date
   const dateObj = new Date(data.date);
-  if (isNaN(dateObj.getTime()) || dateObj.toISOString().split('T')[0] !== data.date) {
-    throw new DatabaseError('Invalid date provided', 'validation');
+  if (
+    isNaN(dateObj.getTime()) ||
+    dateObj.toISOString().split("T")[0] !== data.date
+  ) {
+    throw new DatabaseError("Invalid date provided", "validation");
   }
 
   // Validate repeat frequency
-  const validFrequencies = ['none', 'daily', 'weekly', 'monthly', 'yearly'];
-  if (data.repeatFrequency && !validFrequencies.includes(data.repeatFrequency)) {
-    throw new DatabaseError('Invalid repeat frequency', 'validation');
+  const validFrequencies = ["none", "daily", "weekly", "monthly", "yearly"];
+  if (
+    data.repeatFrequency &&
+    !validFrequencies.includes(data.repeatFrequency)
+  ) {
+    throw new DatabaseError("Invalid repeat frequency", "validation");
   }
 }
