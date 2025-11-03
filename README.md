@@ -1,36 +1,191 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# SoulMoments 🌟
 
-## Getting Started
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=souless94_SoulMoments&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=souless94_SoulMoments)
+[![Snyk Badge](https://snyk.io/test/github/souless94/SoulMoments/badge.svg)](https://snyk.io/test/github/souless94/SoulMoments)
 
-First, run the development server:
+A beautiful, offline-first life moments tracker that helps you capture and reflect on important events in your life. Track birthdays, anniversaries, milestones, and any meaningful moments with elegant time visualization.
+
+## 🌐 Live Demo
+
+**[Try SoulMoments →](https://soul-moments.vercel.app/)**
+
+*Note: This is a demo deployment of a side project. All data is stored locally in your browser.*
+
+## ✨ Features
+
+- **Offline-First**: Works completely offline with local IndexedDB storage
+- **Real-time Updates**: Reactive UI that updates automatically
+- **Recurring Events**: Support for daily, weekly, monthly, and yearly recurring moments
+- **Time Visualization**: See how many days until or since your important moments- 
+- **Moment Management**: Add, edit, and delete moments with ease
+- **Responsive Design**: Beautiful UI that works on all devices
+- **Type-Safe**: Built with TypeScript for reliability
+- **Fast Performance**: Optimized with Next.js 15 and Turbopack
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js 18+ 
+- npm, yarn, or pnpm
+
+### Installation
 
 ```bash
+# Clone the repository
+git clone https://github.com/souless94/SoulMoments.git
+cd SoulMoments
+
+# Install dependencies
+npm install
+
+# Start development server
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🛠️ Tech Stack
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Framework**: Next.js 15 with App Router
+- **Frontend**: React 19, TypeScript
+- **Styling**: Tailwind CSS 4, Radix UI components
+- **Database**: RxDB with IndexedDB (Dexie storage)
+- **Forms**: React Hook Form with Zod validation
+- **Testing**: Vitest (unit), Playwright (E2E)
+- **UI Components**: Custom components with Radix UI primitives
 
-## Learn More
+## 📱 Usage
 
-To learn more about Next.js, take a look at the following resources:
+### Adding Moments
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Click the floating "+" button
+2. Enter a title and optional description
+3. Select the date
+4. Choose repeat frequency (none, daily, weekly, monthly, yearly)
+5. Save your moment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Managing Moments
 
-## Deploy on Vercel
+- **View**: Click on any moment tile to focus on it
+- **Edit**: Use the edit button on moment tiles
+- **Delete**: Use the delete button (with confirmation)
+- **Filter**: Moments are automatically sorted by creation date
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Repeat Events
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Set recurring moments for:
+- **Daily**: Daily habits or routines
+- **Weekly**: Weekly events or meetings
+- **Monthly**: Monthly milestones
+- **Yearly**: Birthdays, anniversaries, holidays
+
+## 🧪 Development
+
+### Available Scripts
+
+```bash
+# Development
+npm run dev          # Start dev server with Turbopack
+npm run build        # Build for production
+npm run start        # Start production server
+
+# Testing
+npm run test         # Run unit tests
+npm run test:watch   # Run tests in watch mode
+npm run test:e2e     # Run E2E tests
+npm run test:e2e:ui  # Run E2E tests with UI
+
+# Code Quality
+npm run lint         # Run ESLint
+```
+
+### Project Structure
+
+```
+├── app/                 # Next.js App Router
+│   ├── components/      # Page-specific components
+│   ├── globals.css      # Global styles
+│   ├── layout.tsx       # Root layout
+│   └── page.tsx         # Home page
+├── components/          # Reusable UI components
+│   └── ui/             # Base UI components
+├── hooks/              # Custom React hooks
+├── lib/                # Utility functions and database
+├── schemas/            # Zod validation schemas
+├── types/              # TypeScript type definitions
+└── e2e/                # End-to-end tests
+```
+
+### Database Schema
+
+Moments are stored locally using RxDB with this structure:
+
+```typescript
+interface MomentDocument {
+  id: string;                    // UUID
+  title: string;                 // Max 100 characters
+  description?: string;          // Optional, max 200 characters
+  date: string;                  // ISO date (YYYY-MM-DD)
+  repeatFrequency: RepeatFrequency; // 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly'
+  createdAt: string;            // ISO timestamp
+  updatedAt: string;            // ISO timestamp
+}
+```
+
+## 🧪 Testing
+
+### Unit Tests
+
+```bash
+npm run test
+```
+
+Tests cover:
+- Database operations
+- Date calculations
+- Component rendering
+- Form validation
+
+### E2E Tests
+
+```bash
+npm run test:e2e
+```
+
+E2E tests include:
+- Basic functionality
+- Moment lifecycle (CRUD operations)
+- Mobile UX
+- Security headers
+- Smoke tests
+
+## 🔒 Security
+
+- **CSP Headers**: Content Security Policy implemented
+- **Input Validation**: All inputs validated with Zod schemas
+- **XSS Protection**: React's built-in XSS protection
+- **Local Storage**: All data stored locally, no external APIs
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is licensed under the GPL-3.0 License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [Radix UI](https://www.radix-ui.com/)
+- Database powered by [RxDB](https://rxdb.info/)
+- Icons from [Lucide React](https://lucide.dev/)
+
+---
+
+Made with ❤️ for capturing life's precious moments

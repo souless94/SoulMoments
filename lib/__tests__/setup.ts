@@ -9,11 +9,11 @@ import 'fake-indexeddb/auto';
 // attach node crypto subtle for rxdb
 import { webcrypto } from 'crypto'
 Object.defineProperty(global, 'crypto', {
-  value: webcrypto
+  value: webcrypto as unknown as Crypto
 })
 
 // only override randomUUID function BUT keep subtle intact
-// @ts-ignore
+// @ts-expect-error - randomUUID is not writable in type but we intentionally override for deterministic test
 global.crypto.randomUUID = () => `test-uuid-${Math.random().toString(36).substring(2, 9)}`
 
 // Mock navigator properties
