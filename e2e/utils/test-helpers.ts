@@ -108,8 +108,9 @@ export class MomentTestHelpers {
     repeatFrequency: 'none' | 'daily' | 'weekly' | 'monthly' | 'yearly';
   }>) {
     const tile = this.getMomentTile(momentTitle);
-    // Click the edit button (bottom right of tile)
-    await tile.locator('button').filter({ hasText: '' }).nth(1).click(); // Second button is edit
+    // Click the edit button (has aria-label="Edit moment")
+    const editButton = tile.locator('button[aria-label="Edit moment"]');
+    await editButton.click();
     await expect(this.modal).toBeVisible();
     
     if (newData.title) {
@@ -134,11 +135,13 @@ export class MomentTestHelpers {
 
   async deleteMoment(momentTitle: string, confirmUndo = false) {
     const tile = this.getMomentTile(momentTitle);
-    // Click the delete button (top right of tile, first button)
-    await tile.locator('button').first().click();
+    // Click the delete button (has aria-label="Delete moment")
+    const deleteButton = tile.locator('button[aria-label="Delete moment"]');
+    await deleteButton.click();
     
-    // Wait for toast to appear
-    await expect(this.toast).toBeVisible();
+    // Wait for toast to appear - get the first visible toast
+    const toast = this.page.locator('[data-sonner-toast]').first();
+    await expect(toast).toBeVisible();
     
     if (confirmUndo) {
       await this.page.getByRole('button', { name: /undo/i }).click();
@@ -153,7 +156,10 @@ export class MomentTestHelpers {
   }
 
   getMomentTile(title: string): Locator {
-    return this.page.locator('[role="button"]').filter({ hasText: title }).first();
+    // Use exact text matching for the title to avoid partial matches
+    return this.page.locator('[role="button"]').filter({ 
+      has: this.page.locator('.text-sm.font-semibold').getByText(title, { exact: true })
+    }).first();
   }
 
   async waitForMomentToAppear(title: string) {

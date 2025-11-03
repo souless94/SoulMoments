@@ -39,26 +39,19 @@ export default function Home() {
     setIsModalOpen(true);
   };
 
-  const handleMomentDelete = (moment: Moment) => {
-    toast.success(`"${moment.title}" deleted`, {
-      action: {
-        label: "Undo",
-        onClick: () => toast.success("Deletion cancelled"),
-      },
-      onDismiss: async () => {
-        try {
-          const db = await initDB();
-          const doc = await db.moments.findOne(moment.id).exec();
-          if (doc) await doc.remove();
-        } catch (err) {
-          console.error(err);
-          toast.error("Failed to delete moment");
-        }
-      },
-      duration: 5000,
-    });
-
-    if (focusedMoment?.id === moment.id) setFocusedMoment(null);
+  const handleMomentDelete = async (moment: Moment) => {
+    try {
+      const db = await initDB();
+      const doc = await db.moments.findOne(moment.id).exec();
+      if (doc) await doc.remove();
+      toast.error("Moment deleted successfully");
+      
+      // Clear focused moment if it was the deleted one
+      if (focusedMoment?.id === moment.id) setFocusedMoment(null);
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete moment");
+    }
   };
 
   const handleFormSubmit = async (data: MomentFormData) => {

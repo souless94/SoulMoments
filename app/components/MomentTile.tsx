@@ -67,7 +67,7 @@ export function MomentTile({
     }
   };
 
-  // Handle delete with countdown and undo option - single toast, no spam
+  // Handle delete with countdown and undo option
   const handleDelete = (e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tile click
 
@@ -108,7 +108,7 @@ export function MomentTile({
         countdown--;
         if (countdown > 0 && !isUndone) {
           // Update the existing toast instead of creating new ones
-          toast.error(`Deleting "${moment.title}" in ${countdown} seconds`, {
+          toast.loading(`Deleting "${moment.title}" in ${countdown} seconds`, {
             id: toastId,
             description: "Click Undo to cancel deletion",
             action: {
@@ -131,16 +131,14 @@ export function MomentTile({
         }
       }, 1000);
 
-      // Set up auto-delete timer
+      // Set up auto-delete timer - call parent's onDelete when countdown expires
       const deleteTimer = setTimeout(() => {
         if (!isUndone) {
           clearInterval(countdownInterval);
           toast.dismiss(toastId);
-          toast.success(`"${moment.title}" deleted`, {
-            description: "Item has been permanently removed",
-            duration: 1000,
-          });
+          // Call the parent's delete handler to actually remove from database
           onDelete(moment);
+          
         }
       }, 5000);
     }
@@ -176,7 +174,7 @@ export function MomentTile({
           onClick={handleDelete}
           aria-label="Delete moment"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
 
@@ -189,7 +187,7 @@ export function MomentTile({
           onClick={handleEdit}
           aria-label="Edit moment"
         >
-          <Edit className="h-3 w-3" />
+          <Edit className="h-4 w-4" />
         </Button>
       </div>
 
