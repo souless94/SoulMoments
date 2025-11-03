@@ -278,17 +278,49 @@ self.addEventListener('sync', (event) => {
   }
 });
 
-// Handle service worker updates
+// Handle service worker updates with proper message validation
 self.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
+  // Validate message structure
+  if (!event.data || typeof event.data !== 'object' || typeof event.data.type !== 'string') {
+    console.warn('Service Worker: Invalid message format received');
+    return;
   }
+
+  const { data } = event;
   
-  if (event.data && event.data.type === 'GET_CACHE_STATUS') {
-    event.ports[0].postMessage({
-      type: 'CACHE_STATUS',
-      caches: [STATIC_CACHE, DYNAMIC_CACHE, RUNTIME_CACHE]
-    });
+  // Validate origin if provided
+  if (data.origin && data.origin !== self.location.origin) {
+    console.warn('Service Worker: Message from untrusted origin:', data.origin);
+    return;
+  }
+
+  // Define allowed message types
+  const allowedMessageTypes = ['SKIP_WAITING', 'GET_CACHE_STATUS'];
+  
+  if (!allowedMessageTypes.includes(data.type)) {
+    console.warn('Service Worker: Unknown message type:', data.type);
+    return;
+  }
+
+  // Handle validated messages
+  switch (data.type) {
+    case 'SKIP_WAITING':
+      console.log('Service Worker: Skipping waiting phase');
+      self.skipWaiting();
+      break;
+      
+    case 'GET_CACHE_STATUS':
+      if (event.ports && event.ports[0]) {
+        event.ports[0].postMessage({
+          type: 'CACHE_STATUS',
+          caches: [STATIC_CACHE, DYNAMIC_CACHE, RUNTIME_CACHE],
+          timestamp: Date.now()
+        });
+      }
+      break;
+      
+    default:
+      console.warn('Service Worker: Unhandled message type:', data.type);
   }
 });
 
