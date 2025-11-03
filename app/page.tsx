@@ -5,13 +5,13 @@ import { toast } from "sonner";
 
 import dynamic from "next/dynamic";
 import { Header } from "./components/Header";
-import { WelcomeBanner } from "./components/WelcomeBanner";
 import { MomentGrid } from "./components/MomentGrid";
 import { MomentBanner } from "./components/MomentBanner";
 import { FloatingAddButton } from "./components/FloatingAddButton";
 import type { Moment, MomentFormData, MomentDocument } from "@/types/moment";
 import { useMomentsDB } from "@/hooks/useMoment";
 import { generateId, initDB } from "@/lib/moments-db";
+import { WelcomeBanner } from "./components/WelcomeBanner";
 
 // Code split the modal component since it's only used when user clicks add/edit
 const MomentModal = dynamic(() => import("./components/MomentModal").then(mod => ({ default: mod.MomentModal })), {
@@ -111,7 +111,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <WelcomeBanner />
+      <WelcomeBanner/>
       <main className="container mx-auto py-8 pb-24">
         {moments.length > 0 && (
           <div className="mb-6 px-4">
@@ -125,59 +125,16 @@ export default function Home() {
           </div>
         )}
 
+        
+
         <MomentBanner moments={moments} focusedMoment={focusedMoment} />
 
-        {moments.length === 0 ? (
-          <div className="text-center py-12 px-4">
-            <div className="max-w-md mx-auto">
-              <div className="mb-6">
-                <svg
-                  className="mx-auto h-12 w-12 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold mb-2">Welcome to SoulMoments</h3>
-              <p className="text-muted-foreground mb-6">
-                Start tracking your important life events and see how time flows. This is a demo app that stores data locally in your browser.
-              </p>
-              <div className="space-y-3">
-                <button
-                  onClick={handleAddMoment}
-                  className="w-full px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors"
-                >
-                  Create Your First Moment
-                </button>
-                <a
-                  href="https://github.com/souless94/SoulMoments#readme"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center justify-center w-full px-4 py-2 text-sm border border-border rounded-md hover:bg-muted transition-colors"
-                >
-                  <svg className="h-4 w-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
-                  Learn More & Documentation
-                </a>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <MomentGrid
-            moments={moments}
-            onMomentClick={handleMomentClick}
-            onMomentEdit={handleMomentEdit}
-            onMomentDelete={handleMomentDelete}
-          />
-        )}
+        <MomentGrid
+          moments={moments}
+          onMomentClick={handleMomentClick}
+          onMomentEdit={handleMomentEdit}
+          onMomentDelete={handleMomentDelete}
+        />
 
         <FloatingAddButton onClick={handleAddMoment} />
 

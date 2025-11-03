@@ -21,9 +21,9 @@ export function WelcomeBanner() {
   if (!isVisible) return null;
 
   return (
-    <div className="border-b bg-blue-50/50 dark:bg-blue-950/20">
-      <div className="container mx-auto px-4 py-3">
-        <Alert className="border-blue-200 dark:border-blue-800 bg-transparent">
+    <div>
+      <div className="container mx-auto px-3 py-3">
+        <Alert>
           <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
           <AlertDescription className="flex items-center justify-between">
             <div className="flex-1 pr-4">
