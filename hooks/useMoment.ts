@@ -11,7 +11,7 @@ export function useMomentsDB() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let subscription: any = null;
+    let subscription: { unsubscribe: () => void } | null = null;
 
     const init = async () => {
       try {
@@ -27,8 +27,8 @@ export function useMomentsDB() {
         }).$;
 
         subscription = observable.subscribe((docs: MomentDocument[]) => {
-          const processed = docs.map((doc: any) => {
-            const data = doc.toJSON() as MomentDocument;
+          const processed = docs.map((doc: MomentDocument & { toJSON?: () => MomentDocument }) => {
+            const data = doc.toJSON ? doc.toJSON() : doc;
             const calculation = calculateDayDifference(data.date, data.repeatFrequency);
             return {
               ...data,
@@ -38,7 +38,7 @@ export function useMomentsDB() {
           });
           setMoments(processed);
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('DB init failed:', err);
         setError(err instanceof Error ? err.message : 'Failed to initialize DB');
       } finally {

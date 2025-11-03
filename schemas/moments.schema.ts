@@ -12,6 +12,7 @@ export interface MomentDocument {
 }
 
 export const momentSchema: RxJsonSchema<MomentDocument> = {
+  keyCompression: true,
   title: "moment schema",
   version: 0,
   primaryKey: "id",
@@ -50,7 +51,14 @@ export const momentSchema: RxJsonSchema<MomentDocument> = {
       maxLength: 50,
     },
   },
-  required: ["id", "title", "date", "repeatFrequency", "createdAt", "updatedAt"],
+  required: [
+    "id",
+    "title",
+    "date",
+    "repeatFrequency",
+    "createdAt",
+    "updatedAt",
+  ],
   indexes: [
     "date",
     "createdAt",

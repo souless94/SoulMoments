@@ -34,7 +34,7 @@ const tileVariants = {
 /**
  * MomentTile component that displays a single moment as a card
  */
-export function MomentTile({
+export const MomentTile = React.memo(function MomentTile({
   moment,
   onClick,
   onEdit,
@@ -43,32 +43,36 @@ export function MomentTile({
   // Use the pre-calculated values from the moment object for consistency
   const { status } = moment;
 
-  // Format the date for display - use next occurrence for repeat events
-  const displayDate =
-    moment.isRepeating && moment.nextOccurrence
-      ? moment.nextOccurrence
-      : moment.date;
-  const formattedDate = formatDisplayDate(displayDate);
-  const datePrefix =
-    moment.isRepeating && moment.nextOccurrence ? "Next: " : "";
+  // Format the date for display - use next occurrence for repeat events - memoized for performance
+  const { formattedDate, datePrefix } = React.useMemo(() => {
+    const displayDate =
+      moment.isRepeating && moment.nextOccurrence
+        ? moment.nextOccurrence
+        : moment.date;
+    const formattedDate = formatDisplayDate(displayDate);
+    const datePrefix =
+      moment.isRepeating && moment.nextOccurrence ? "Next: " : "";
+    
+    return { formattedDate, datePrefix };
+  }, [moment.isRepeating, moment.nextOccurrence, moment.date]);
 
-  // Handle tile click - for banner countdown change
-  const handleClick = () => {
+  // Handle tile click - for banner countdown change - memoized to prevent re-renders
+  const handleClick = React.useCallback(() => {
     if (onClick) {
       onClick(moment);
     }
-  };
+  }, [onClick, moment]);
 
-  // Handle edit button click
-  const handleEdit = (e: React.MouseEvent) => {
+  // Handle edit button click - memoized to prevent re-renders
+  const handleEdit = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tile click
     if (onEdit) {
       onEdit(moment);
     }
-  };
+  }, [onEdit, moment]);
 
-  // Handle delete with countdown and undo option - single toast, no spam
-  const handleDelete = (e: React.MouseEvent) => {
+  // Handle delete with countdown and undo option - memoized to prevent re-renders
+  const handleDelete = React.useCallback((e: React.MouseEvent) => {
     e.stopPropagation(); // Prevent tile click
 
     if (onDelete) {
@@ -108,7 +112,7 @@ export function MomentTile({
         countdown--;
         if (countdown > 0 && !isUndone) {
           // Update the existing toast instead of creating new ones
-          toast.error(`Deleting "${moment.title}" in ${countdown} seconds`, {
+          toast.loading(`Deleting "${moment.title}" in ${countdown} seconds`, {
             id: toastId,
             description: "Click Undo to cancel deletion",
             action: {
@@ -131,20 +135,18 @@ export function MomentTile({
         }
       }, 1000);
 
-      // Set up auto-delete timer
+      // Set up auto-delete timer - call parent's onDelete when countdown expires
       const deleteTimer = setTimeout(() => {
         if (!isUndone) {
           clearInterval(countdownInterval);
           toast.dismiss(toastId);
-          toast.success(`"${moment.title}" deleted`, {
-            description: "Item has been permanently removed",
-            duration: 1000,
-          });
+          // Call the parent's delete handler to actually remove from database
           onDelete(moment);
+          
         }
       }, 5000);
     }
-  };
+  }, [moment, onDelete]);
 
   return (
     <Card
@@ -176,7 +178,7 @@ export function MomentTile({
           onClick={handleDelete}
           aria-label="Delete moment"
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash2 className="h-4 w-4" />
         </Button>
       </div>
 
@@ -189,7 +191,7 @@ export function MomentTile({
           onClick={handleEdit}
           aria-label="Edit moment"
         >
-          <Edit className="h-3 w-3" />
+          <Edit className="h-4 w-4" />
         </Button>
       </div>
 
@@ -247,4 +249,4 @@ export function MomentTile({
       </CardFooter>
     </Card>
   );
-}
+});
